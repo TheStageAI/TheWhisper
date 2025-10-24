@@ -1,0 +1,61 @@
+{
+  "name": "thenotes",
+  "version": "1.0.1",
+  "description": "Desktop speech-to-text electron app",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "start:dev": "NODE_ENV=development electron .",
+    "build": "electron-builder build --mac",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.thestage.thenotes",
+    "productName": "TheNotes",
+    "asar": true,
+    "files": [
+      "**/*",
+      "!README.md",
+      "!*.md",
+      "!node_modules/.cache"
+    ],
+    "extraFiles": [
+      {
+        "from": "node_modules/electron/dist/Electron.app/Contents/Frameworks/Electron Framework.framework/Versions/A/Libraries/libffmpeg.dylib",
+        "to": "libffmpeg.dylib"
+      },
+      {
+        "from": "node_modules/siriwave/dist/siriwave.umd.js",
+        "to": "siriwave.umd.js"
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "src/assets/fonts",
+        "to": "assets/fonts"
+      }
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "build/icon.icns",
+      "gatekeeperAssess": false,
+      "identity": null,
+      "target": [
+        "dir"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^35.1.5",
+    "electron-builder": "^26.0.12"
+  },
+  "author": "TheStage AI INC.",
+  "license": "MIT",
+  "dependencies": {
+    "electron-log": "^5.4.0",
+    "siriwave": "^2.4.0"
+  }
+}
