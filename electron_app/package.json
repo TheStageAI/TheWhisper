@@ -2,7 +2,7 @@
   "name": "thenotes",
   "version": "1.0.1",
   "description": "Desktop speech-to-text electron app",
-  "main": "src/main.js",
+  "main": "main.js",
   "scripts": {
     "start": "electron .",
     "start:dev": "NODE_ENV=development electron .",
@@ -31,8 +31,8 @@
     ],
     "extraResources": [
       {
-        "from": "src/assets/fonts",
-        "to": "assets/fonts"
+        "from": "assets",
+        "to": "assets"
       }
     ],
     "directories": {

@@ -19,6 +19,7 @@ TheNotes is a client application that connects to a separate Python server for s
 1. Clone this repository:
 ```bash
 git clone <repository-url>
+cd electron_app
 ```
 
 2. Install dependencies:
@@ -53,42 +54,12 @@ npm run build
 
 This will create a local build in the `dist/` directory. Note that the built application will not be signed and may show security warnings when running.
 
-## Features
-
-- Real-time speech-to-text transcription
-- Modern, responsive UI with Siri-like wave animation
-- Audio recording with visual feedback
-- Text transcription with copy functionality
-- Language selection support
-- Cross-platform desktop application
-
-## Architecture
-
-The application consists of:
-
-- **Main Process** (`src/main.js`): Electron main process handling window creation and security
-- **Renderer Process** (`src/app.js`): Frontend application logic and UI
-- **Preload Script** (`src/preload.js`): Secure communication bridge between main and renderer processes
-- **Audio Processor** (`src/audio-processor.js`): Web Audio API integration for audio recording
-
-## API Integration
-
-The client communicates with a Python server via HTTP API:
-
-- **Base URL**: `http://localhost:8000`
-- **Endpoints**:
-  - `POST /session/create` - Create new transcription session
-  - `POST /session/{id}/end` - End transcription session
-  - `POST /session/{id}/clear` - Clear session data
-  - `POST /session/{id}/add_chunk` - Send audio chunk for processing
-  - `POST /session/{id}/process` - Process audio and get transcription
-
 ## Development
 
 ### Project Structure
 
 ```
-src/
+electron_app/
 ├── main.js           # Electron main process
 ├── app.js            # Frontend application logic
 ├── preload.js        # Secure IPC bridge
@@ -96,14 +67,9 @@ src/
 ├── index.html        # Main HTML template
 ├── styles.css        # Application styles
 └── assets/           # Static assets (fonts, icons)
+    ├── fonts/
+    └── icon.png
 ```
-
-### Scripts
-
-- `npm start` - Start the application
-- `npm run start:dev` - Start in development mode with DevTools
-- `npm run build` - Build the application locally
-- `npm run dist` - Create distribution packages (same as build)
 
 ## Dependencies
 
@@ -122,14 +88,6 @@ The application implements several security measures:
 - Secure IPC communication via preload script
 
 **Note**: The built application is not code-signed and may show security warnings on macOS. This is normal for development builds.
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Support
-
-For issues and questions, please create an issue in the repository.
 
 ---
 
