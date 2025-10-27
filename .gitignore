@@ -214,3 +214,16 @@ __marimo__/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Electron
+node_modules
+dist
+dist-ssr
+*.local
