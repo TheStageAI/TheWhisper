@@ -34,7 +34,7 @@ nvidia = [
   "torchaudio==2.7.0",
 ]
 apple = [
-  "torch==2.7.0",
+  "torch==2.6.0",
   "torchaudio==2.7.0",
   "transformers==4.49.0",
   "editdistance",
