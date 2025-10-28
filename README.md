@@ -121,7 +121,107 @@ thestage config set --api-token <YOUR_API_TOKEN>
 
 ## ▶️ Usage / Deployment
 
-### Streaming transcription
+### Apple Usage
+
+```python
+import torch
+from thestage_speechkit.apple import ASRPipeline
+
+model = ASRPipeline(
+    model='thestage/thewhisper-large-v3-trubo',
+    # optimized model with ANNA
+    model_size='S'
+    model_chunk='10s',
+    device='cuda',
+    hf_token=""
+)
+
+# inference
+result = model(
+	audio="path_to_your_audio.wav", 
+	max_batch_size=32,
+	return_timestamps="segment"
+)
+
+print(result["text"])
+```
+
+### Apple Usage with Streaming
+
+```python
+from thestage_speechkit.apple import WhisperStreamingPipeline
+from thestage_speechkit.streaming import MicStream, FileStream, StdoutStream
+
+streaming_model = WhisperStreaming(
+	model='thewhisper-large-v3-turbo',
+	# Optimized model by ANNA
+	model_size='S',
+  # Window length
+	chunk_size='10s'
+	platform
+)
+
+# set stride in miliseconds
+mic_stream = MicStream(stride=500)
+output_stream = StdoutStream()
+
+while True:
+	chunk = mic_stream.next_chunk()
+	approved_text, assumption = streaming_model(chunk)
+	output_stream.rewrite(approved_text, assumption)
+```
+
+### Nvidia Usage (HuggingFace Transfomers)
+
+```python
+import torch
+from thestage_speechkit.nvidia import ASRPipeline
+
+model = ASRPipeline(
+    model='thestage/thewhisper-large-v3-trubo',
+    # allowed: 10s, 15s, 20s, 30s
+    model_chunk='10s',
+    # optimized TheStage AI engines
+    device='cuda',
+    hf_token=""
+)
+
+# inference
+result = model(
+	audio="path_to_your_audio.wav", 
+	max_batch_size=32,
+	return_timestamps="segment"
+)
+
+print(result["text"])
+```
+
+### Nvidia Usage (TheStage AI engines)
+
+```python
+import torch
+from thestage_speechkit.nvidia import ASRPipeline
+
+model = ASRPipeline(
+    model='thestage/thewhisper-large-v3-trubo',
+    # allowed: 10s, 15s, 20s, 30s
+    model_chunk='10s',
+    # optimized TheStage AI engines
+    mode='S',
+    device='cuda',
+    hf_token=""
+)
+
+# inference
+result = model(
+	audio="path_to_your_audio.wav", 
+	max_batch_size=32,
+	return_timestamps="segment"
+)
+
+print(result["text"])
+```
+
 
 ## 💻 Build On-Device Desktop Application for Apple
 
