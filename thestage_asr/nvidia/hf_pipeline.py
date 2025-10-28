@@ -15,7 +15,7 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
         tokenizer: Optional[PreTrainedTokenizer] = None,
         model_size: str = None,
         chunk_length_s: int = 30,
-        device: str = "cpu",
+        device: str = "cuda",
         torch_dtype: Optional[torch.dtype] = None,
         **kwargs,
     ):
