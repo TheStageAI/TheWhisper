@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>TheNotes App</title>
+    <link rel="icon" href="assets/icon.png" type="image/png" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta property="og:title" content="Granola App" />
+    <meta property="og:description" content="Real-time transcription desktop app built with Electron & FastAPI." />
+    <meta property="og:image"
+        content="https://cdn.prod.website-files.com/660e804a68d9d615da6a3ecd/679ce010eb33bcc813bbbbd8_%20OG.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://app.thestage.ai" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+        @font-face {
+            font-family: 'Inter';
+            src: url('./assets/fonts/Inter-Regular.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+
+        @font-face {
+            font-family: 'Inter';
+            src: url('./assets/fonts/Inter-Medium.woff2') format('woff2');
+            font-weight: 500;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+    <!-- Siriwave -->
+    <script>
+      const siriWaveScript = document.createElement('script');
+      siriWaveScript.onerror = function() {
+        const fallbackScript = document.createElement('script');
+        fallbackScript.src = 'siriwave.umd.js';
+        document.head.appendChild(fallbackScript);
+      };
+      siriWaveScript.src = './node_modules/siriwave/dist/siriwave.umd.js';
+      document.head.appendChild(siriWaveScript);
+    </script>
+</head>
+
+<body>
+    <div class="error-wrapper" id="errorWrapper">
+        <div class="error__component">
+            <div class="error__overlay"></div>
+            <div class="error-block">
+                <div class="text-error-caption">Something's broken, please contact TheStage AI INC</div>
+                <button class="error-button">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="preloader" id="preloader">
+        <div class="preloader__component">
+            <div class="preloader__grid">
+                <div class="preloader-circle"></div>
+                <div class="preloader-circle"></div>
+                <div class="preloader-circle"></div>
+                <div class="preloader-circle"></div>
+            </div>
+            <div class="preloader-message" id="preloaderMessage">Setting everything up for you...</div>
+        </div>
+    </div>
+
+    <main id="app">
+        <div class="background"></div>
+        <div class="granola__wrapper">
+            <div class="brand__wrapper">
+                <div class="brand__text">Powered by</div>
+                <div class="brand__logo">
+                    <svg width="100%" height="100%" viewBox="0 0 1920 379" fill="none"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <g clip-path="url(#clip0_19335_92070)">
+                            <path
+                                d="M454.82 101.239V132.839H517.44V303.719H555.48V132.839H626.3V303.719H662.58V222.959C662.58 197.209 669.6 179.649 694.18 179.649C713.2 179.649 721.39 191.359 721.39 213.009V303.719H757.38V207.449C757.38 165.309 733.68 149.809 707.05 149.809C682.18 149.809 669.6 161.509 662.57 172.629V101.229H454.81L454.82 101.239Z"
+                                fill="currentColor" />
+                            <path
+                                d="M844.3 149.82C796.9 149.82 773.2 184.05 773.2 230.58C773.2 269.79 793.98 307.24 842.55 307.24C887.91 307.24 904.29 278.56 909.85 259.84H873.27C869.17 269.5 863.03 278.27 843.71 278.27C821.18 278.27 809.77 258.67 809.77 236.13H911.31C911.9 231.74 911.9 228.23 911.9 223.25C911.9 187.55 894.93 149.81 844.31 149.81L844.3 149.82ZM810.66 213.02C812.71 191.66 821.78 176.44 844.02 176.44C866.26 176.44 875.04 192.83 875.33 213.02H810.66Z"
+                                fill="currentColor" />
+                            <path
+                                d="M999.69 98.3196C952.58 98.3196 927.71 122.61 927.71 155.96C927.71 183.76 942.34 202.48 994.72 215.07C1031.59 223.55 1041.25 232.33 1041.25 249.89C1041.25 266.28 1030.42 277.39 1004.38 277.39C978.34 277.39 963.71 267.15 958.73 245.5H920.4C925.08 280.32 950.25 306.36 1001.46 306.36C1052.67 306.36 1080.17 280.9 1080.17 245.5C1080.17 217.99 1068.17 195.75 1009.94 182C976.29 174.1 966.63 167.66 966.63 151.86C966.63 136.06 978.33 127.28 998.52 127.28C1025.73 127.28 1034.99 141.44 1036.85 153.32H1075.18C1072.25 124.93 1048.04 98.3096 999.69 98.3096V98.3196Z"
+                                fill="currentColor" />
+                            <path
+                                d="M1139.57 111.479H1103.29V153.329H1075.19V181.129H1103.29V265.399C1103.29 291.149 1113.24 305.779 1140.45 305.779C1148.65 305.779 1159.18 305.489 1166.79 302.849V277.389C1163.28 277.979 1158.89 277.979 1155.96 277.979C1143.08 277.979 1139.57 272.709 1139.57 260.129V181.129H1170.3V153.329H1139.57V111.479Z"
+                                fill="currentColor" />
+                            <path
+                                d="M1301.68 200.729C1301.68 165.619 1280.32 150.109 1241.11 149.819C1196.34 149.529 1180.83 172.059 1178.78 196.639H1213.6C1215.65 185.519 1219.74 176.449 1239.64 176.449C1262.17 176.449 1265.98 188.739 1265.98 200.439V210.679H1243.16C1198.97 210.679 1171.76 226.479 1171.76 260.419C1171.76 283.539 1186.98 307.239 1222.97 307.239C1250.48 307.239 1261.3 296.409 1266.57 287.339C1266.86 292.899 1267.74 300.509 1268.91 303.729H1303.73C1302.85 299.929 1301.68 280.909 1301.68 266.859V200.729ZM1266.28 237.889C1266.28 260.129 1262.48 280.609 1232.63 280.609C1216.54 280.609 1208.34 270.659 1208.34 258.369C1208.34 241.399 1220.04 233.499 1246.67 233.499H1266.27V237.889H1266.28Z"
+                                fill="currentColor" />
+                            <path
+                                d="M1424 170.299C1421.37 162.399 1410.25 149.819 1383.33 149.819C1346.17 149.819 1317.79 181.129 1317.79 228.819C1317.79 270.659 1341.49 302.269 1380.12 302.269C1403.24 302.269 1416.11 293.779 1424.01 279.439V288.219C1424.01 319.529 1417.86 337.669 1388.31 337.669C1371.34 337.669 1361.68 330.059 1358.17 317.769H1321.3C1323.06 335.909 1335.05 364.879 1386.85 364.879C1438.65 364.879 1459.71 335.319 1459.71 287.049V196.629C1459.71 181.999 1459.71 165.029 1460 153.319H1425.47C1425.18 155.949 1424.3 165.309 1424.01 170.289L1424 170.299ZM1390.06 272.709C1369.58 272.709 1355.24 255.149 1355.24 227.359C1355.24 196.339 1369.58 179.369 1390.94 179.369C1419.32 179.369 1425.17 197.509 1425.17 225.899C1425.17 254.289 1417.56 272.719 1390.06 272.719V272.709Z"
+                                fill="currentColor" />
+                            <path
+                                d="M1546.9 149.82C1499.5 149.82 1475.8 184.05 1475.8 230.58C1475.8 269.79 1496.58 307.24 1545.15 307.24C1590.51 307.24 1606.89 278.56 1612.45 259.84H1575.87C1571.77 269.5 1565.63 278.27 1546.32 278.27C1523.79 278.27 1512.38 258.67 1512.38 236.13H1613.91C1614.5 231.74 1614.5 228.23 1614.5 223.25C1614.5 187.55 1597.53 149.81 1546.91 149.81L1546.9 149.82ZM1513.25 213.02C1515.3 191.66 1524.37 176.44 1546.61 176.44C1568.85 176.44 1577.63 192.83 1577.92 213.02H1513.25Z"
+                                fill="currentColor" />
+                            <path d="M1667.17 259.84H1628.25V303.73H1667.17V259.84Z" fill="currentColor" />
+                            <path
+                                d="M1748.52 101.239L1678.58 303.729H1716.03L1733.88 252.229H1810.25L1828.68 303.729H1868.77L1795.91 101.239H1748.51H1748.52ZM1742.37 220.629C1755.25 181.129 1765.78 148.649 1770.76 129.629H1771.05C1776.02 146.889 1785.68 174.399 1801.48 220.629H1742.37Z"
+                                fill="currentColor" />
+                            <path d="M1920 101.239H1881.96V303.729H1920V101.239Z" fill="currentColor" />
+                            <path
+                                d="M282.36 212.06C277.45 266.18 231.97 308.6 176.56 308.6C117.87 308.6 70.3 261.03 70.3 202.34C70.3 146.94 112.71 101.46 166.83 96.5395C169.31 69.2495 182.08 44.9295 201.27 27.5295C193.19 26.3995 184.95 25.7695 176.56 25.7695C79.05 25.7695 0 104.82 0 202.33C0 299.84 79.05 378.89 176.56 378.89C274.07 378.89 353.12 299.84 353.12 202.33C353.12 193.94 352.49 185.7 351.36 177.62C333.96 196.8 309.64 209.58 282.35 212.06H282.36Z"
+                                fill="currentColor" />
+                            <path
+                                d="M176.56 96.0703C173.28 96.0703 170.04 96.2403 166.84 96.5303C166.55 99.7303 166.38 102.97 166.38 106.25C166.38 164.93 213.95 212.51 272.64 212.51C275.92 212.51 279.16 212.34 282.36 212.05C282.65 208.85 282.82 205.61 282.82 202.33C282.82 143.65 235.25 96.0703 176.56 96.0703Z"
+                                fill="currentColor" />
+                            <path
+                                d="M351.36 177.62C368.46 158.76 378.89 133.73 378.89 106.26C378.89 47.58 331.32 0 272.63 0C245.16 0 220.13 10.42 201.27 27.53C278.99 38.42 340.47 99.89 351.36 177.62Z"
+                                fill="currentColor" />
+                        </g>
+                        <defs>
+                            <clipPath id="clip0_19335_92070">
+                                <rect width="1920" height="378.89" fill="currentColor" />
+                            </clipPath>
+                        </defs>
+                    </svg>
+
+                </div>
+            </div>
+            <h1>Real-time transcription</h1>
+            <div class="granola__component">
+                <!-- RECORDER -->
+                <div class="recorder">
+                    <div class="recorder__analyser">
+                        <!--Siri Wave Container-->
+                        <div id="siri-container">
+                            <div id="siri-canvas"></div>
+                        </div>
+                    </div>
+                    <div class="recorder__panel">
+                        <div class="panel__title">Hello World!</div>
+                        <div class="progress__bar">
+                            <div class="progress__cover-bar"></div>
+                        </div>
+                    </div>
+
+                    <button class="recorder__button" onclick="toggleButton()">
+                        <div class="record-circle"></div>
+                    </button>
+                </div>
+
+                <!-- TRANSCRIPTOR -->
+                <div class="transcriptor">
+                    <div class="transcriptor__header">
+                        <div class="transcriptor__title">Transcription output</div>
+                        <div class="transcriptor__button-wrapper">
+                            <div class="lang-select-wrapper">
+                                <button class="lang-trigger">EN</button>
+                                <div class="lang-dropdown lang-dropdown_hidden">
+                                    <div class="lang-dropdown__inner">
+                                        <ul>
+                                            <li class="active">English ✓</li>
+                                            <li class="disabled">Chinese</li>
+                                            <li class="disabled">Spanish</li>
+                                            <li class="disabled">Hindi</li>
+                                            <li class="disabled">French</li>
+                                            <li class="disabled">German</li>
+                                            <li class="disabled">Japanese</li>
+                                            <li class="disabled">Korean</li>
+                                            <li class="disabled">Russian</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button class="transcriptor__copyBtn" onclick="copyText()">
+                                <svg width="100%" height="100%" viewBox="0 0 20 20" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M7 7V4.2002C7 3.08009 7 2.51962 7.21799 2.0918C7.40973 1.71547 7.71547 1.40973 8.0918 1.21799C8.51962 1 9.08009 1 10.2002 1H15.8002C16.9203 1 17.4801 1 17.9079 1.21799C18.2842 1.40973 18.5905 1.71547 18.7822 2.0918C19.0002 2.51962 19.0002 3.07967 19.0002 4.19978V9.7998C19.0002 10.9199 19.0002 11.48 18.7822 11.9078C18.5905 12.2841 18.2839 12.5905 17.9076 12.7822C17.4802 13 16.921 13 15.8031 13H13M7 7H4.2002C3.08009 7 2.51962 7 2.0918 7.21799C1.71547 7.40973 1.40973 7.71547 1.21799 8.0918C1 8.51962 1 9.08009 1 10.2002V15.8002C1 16.9203 1 17.4801 1.21799 17.9079C1.40973 18.2842 1.71547 18.5905 2.0918 18.7822C2.5192 19 3.07899 19 4.19691 19H9.80355C10.9215 19 11.4805 19 11.9079 18.7822C12.2842 18.5905 12.5905 18.2839 12.7822 17.9076C13 17.4802 13 16.921 13 15.8031V13M7 7H9.8002C10.9203 7 11.4801 7 11.9079 7.21799C12.2842 7.40973 12.5905 7.71547 12.7822 8.0918C13 8.51921 13 9.079 13 10.1969L13 13"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </button>
+
+                            <button class="transcriptor__deleteBtn" onclick="clearText()">
+                                <svg width="100%" height="100%" viewBox="0 0 18 20" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M10.8826 8V11.5V15M6.92958 8V11.5V15M2.97653 4V15.8C2.97653 16.9201 2.97653 17.4798 3.19195 17.9076C3.38145 18.2839 3.6836 18.5905 4.05551 18.7822C4.4779 19 5.03112 19 6.13591 19H11.6763C12.7811 19 13.3335 19 13.7559 18.7822C14.1278 18.5905 14.431 18.2839 14.6205 17.9076C14.8357 17.4802 14.8357 16.921 14.8357 15.8031V4M2.97653 4H4.95305M2.97653 4H1M4.95305 4H12.8592M4.95305 4C4.95305 3.06812 4.95305 2.60241 5.10351 2.23486C5.30411 1.74481 5.68863 1.35523 6.17294 1.15224C6.53617 1 6.99689 1 7.91784 1H9.89437C10.8153 1 11.2758 1 11.639 1.15224C12.1233 1.35523 12.508 1.74481 12.7086 2.23486C12.8591 2.6024 12.8592 3.06812 12.8592 4M12.8592 4H14.8357M14.8357 4H16.8122"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="transcriptor__body" id="transcriptor"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script src="app.js"></script>
+</body>
+
+</html>
