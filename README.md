@@ -17,8 +17,7 @@ For the first release this repository provides **open-source transcription model
 - CoreML engines for macOS / Apple Silicon with the lowest in the world power consumption for MacOS
 - Local RestAPI with frontend examples using ReactJS and Electron
 
-It is optimized for **low-latency**, **low power usage**, and **scalable** streaming transcription. <br>
-Ideal for real-time captioning, live meetings, voice interfaces, and edge deployments.
+It is optimized for **low-latency**, **low power usage**, and **scalable** streaming transcription. Ideal for real-time captioning, live meetings, voice interfaces, and edge deployments.
 
 <details>
   <summary><strong>📖 Table of Contents</strong></summary>
@@ -236,6 +235,8 @@ https://github.com/user-attachments/assets/093c1442-faa5-4bb5-9885-cffd1dda1aa2
 -----
 
 ## 📊 Quality Benchmarks
+
+TheWhisper is a fine-tuned Whisper model that can process audio chunks of any size up to 30 seconds. Unlike the original Whisper models, it doesn't require padding audio with silence to reach 30 seconds. We conducted quality benchmarking across different chunk sizes: 10, 15, 20, and 30 seconds. For quality benchmarks, we used the [Open ASR Leaderboard](https://github.com/huggingface/open_asr_leaderboard#evaluate-a-model)
 
 <img width="1547" height="531" alt="vanilla whisper (1)" src="https://github.com/user-attachments/assets/f0c86e58-d834-4ac7-a06b-df3a7ae3e9e9" />
 <img width="1547" height="458" alt="TheStage AI Whisper (1)" src="https://github.com/user-attachments/assets/17fb45a3-b33d-4c83-b843-69b0f0aa3f65" />
