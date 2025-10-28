@@ -56,7 +56,9 @@ class BatchedASRPipeline:
 
         if isinstance(model, str):
             # Load model and processor from Hugging Face Hub
-            self.processor = WhisperProcessor.from_pretrained(model, token=token)
+            self.processor = WhisperProcessor.from_pretrained(
+                model, token=token, chunk_length=chunk_length_s
+            )
             if model_size is not None:
                 from elastic_models.transformers import WhisperForConditionalGeneration
 
