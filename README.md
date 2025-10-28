@@ -237,6 +237,10 @@ https://github.com/user-attachments/assets/093c1442-faa5-4bb5-9885-cffd1dda1aa2
 
 ## 📊 Quality Benchmarks
 
+<img width="1547" height="531" alt="vanilla whisper (1)" src="https://github.com/user-attachments/assets/f0c86e58-d834-4ac7-a06b-df3a7ae3e9e9" />
+<img width="1547" height="458" alt="TheStage AI Whisper (1)" src="https://github.com/user-attachments/assets/17fb45a3-b33d-4c83-b843-69b0f0aa3f65" />
+
+
 ### 10s chunks
 
 | Model | voxpopuli_test | tedlium_test | spgispeech_test | librispeech_test.other | librispeech_test.clean | gigaspeech_test | earnings22_test | ami_test | Mean WER |
