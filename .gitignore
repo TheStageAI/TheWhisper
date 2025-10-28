@@ -227,3 +227,8 @@ node_modules
 dist
 dist-ssr
 *.local
+
+*.wav
+*.mp3
+
+model_turbo*

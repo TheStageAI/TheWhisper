@@ -1,0 +1,48 @@
+from thestage_asr.streaming import StreamingPipeline, MicStream, FileStream, StdoutStream
+from transformers.utils import logging as hf_logging
+import logging, warnings
+
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--use-mic', action='store_true')
+args = parser.parse_args()
+
+# Silence Transformers logs
+hf_logging.set_verbosity_error()
+hf_logging.disable_progress_bar()
+logging.getLogger("transformers").setLevel(logging.ERROR)
+
+# Silence specific runtime UserWarnings
+warnings.filterwarnings("ignore", message=r"Whisper did not predict an ending timestamp.*", category=UserWarning)
+warnings.filterwarnings("ignore", message=r"Keyword arguments .* not recognized.*", category=UserWarning)
+
+
+streaming_model = StreamingPipeline(
+    model='TheStageAI/thewhisper-large-v3-turbo',
+    chunk_length_s=10,
+    use_vad=False,
+    platform='apple',
+)
+
+if args.use_mic:
+    audio_stream = MicStream(step_size_s=0.5, sample_rate=16000)
+else:
+    audio_stream = FileStream(
+        'example_speech.wav', step_size_s=0.5, sample_rate=16000
+    )
+
+output_stream = StdoutStream()
+all_approved = []
+while True:
+    chunk = audio_stream.next_chunk()
+    if chunk is not None:
+        streaming_model.add_new_chunk(chunk)
+        approved, assumption = streaming_model.process_new_chunk()
+        all_approved += approved
+        output_stream.write(all_approved, assumption)
+    else:
+        break
+
+audio_stream.close()
+output_stream.close()
