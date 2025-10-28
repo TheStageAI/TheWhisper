@@ -229,5 +229,6 @@ dist-ssr
 
 *.wav
 *.mp3
+.DS_Store
 
 model_turbo*
