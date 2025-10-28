@@ -12,11 +12,9 @@ args = parser.parse_args()
 hf_logging.set_verbosity_error()
 hf_logging.disable_progress_bar()
 logging.getLogger("transformers").setLevel(logging.ERROR)
-
 # Silence specific runtime UserWarnings
 warnings.filterwarnings("ignore", message=r"Whisper did not predict an ending timestamp.*", category=UserWarning)
 warnings.filterwarnings("ignore", message=r"Keyword arguments .* not recognized.*", category=UserWarning)
-
 
 streaming_model = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
@@ -37,8 +35,7 @@ all_approved = []
 while True:
     chunk = audio_stream.next_chunk()
     if chunk is not None:
-        streaming_model.add_new_chunk(chunk)
-        approved, assumption = streaming_model.process_new_chunk()
+        approved, assumption = streaming_model(chunk)
         all_approved += approved
         output_stream.write(all_approved, assumption)
     else:

@@ -90,6 +90,12 @@ class StreamingPipeline:
         self.current_time: float = 0.0
 
         self.audio_queue: List[np.ndarray] = []
+
+    def __call__(self, chunk: np.ndarray) -> List[Dict[str, Any]]:
+        """
+        """
+        self.add_new_chunk(chunk)
+        return self.process_new_chunk()
     
     def add_new_chunk(self, chunk: np.ndarray) -> None:
         """
