@@ -9,7 +9,7 @@ from typing import Dict, List, Optional
 import signal
 import sys
 
-from thestage_asr.streaming import StreamingPipeline
+from thestage_speechkit.streaming import StreamingPipeline
 
 app = FastAPI()
 streaming_manager = None

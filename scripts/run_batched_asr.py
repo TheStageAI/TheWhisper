@@ -1,4 +1,4 @@
-from thestage_asr.nvidia import BatchedASRPipeline
+from thestage_speechkit.nvidia import BatchedASRPipeline
 
 chunk_length_s = 10
 pipe = BatchedASRPipeline(
