@@ -50,6 +50,10 @@ npm install
 ### Starting the Client
 
 1. First, make sure your Python [server](../examples/server.py) is running on `localhost:8000`
+```
+python examples/server.py
+```
+
 2. Start the client application:
 ```bash
 npm start
