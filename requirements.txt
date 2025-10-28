@@ -9,5 +9,4 @@ librosa
 fastapi
 uvicorn
 python-multipart
-ane-transformers
 sounddevice
