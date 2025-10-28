@@ -50,7 +50,9 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
         super().__init__(
             model, 
             feature_extractor=feature_extractor, 
-            tokenizer=tokenizer, device=device, 
+            tokenizer=tokenizer, 
+            device=device, 
+            chunk_length_s=chunk_length_s,
             torch_dtype=torch_dtype, 
             **kwargs
         )
