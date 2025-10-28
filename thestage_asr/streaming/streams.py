@@ -9,52 +9,6 @@ from librosa import load, resample
 import numpy as np
 
 # ------------------------------
-# Utility helpers
-# ------------------------------
-
-def _pcm_bytes_to_float32(data: bytes, sampwidth: int, nchannels: int) -> np.ndarray:
-    """Convert PCM byte string to mono float32 in [-1, 1]."""
-    if sampwidth == 1:
-        # 8-bit unsigned PCM: 0..255 -> -1..1
-        arr = np.frombuffer(data, dtype=np.uint8).astype(np.int16)  # promote
-        arr = (arr - 128) / 128.0
-    elif sampwidth == 2:
-        # 16-bit signed PCM
-        arr = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
-    elif sampwidth == 3:
-        # 24-bit PCM -> pack into int32 then scale
-        a = np.frombuffer(data, dtype=np.uint8).astype(np.uint32)
-        a = a.reshape(-1, 3)
-        # little-endian: b0 + b1<<8 + b2<<16; sign-extend if needed
-        v = (a[:, 0] | (a[:, 1] << 8) | (a[:, 2] << 16)).astype(np.int32)
-        sign_mask = 1 << 23
-        v = (v ^ sign_mask) - sign_mask  # sign-extend 24-bit
-        arr = v.astype(np.float32) / (2**23)
-    elif sampwidth == 4:
-        # 32-bit signed PCM
-        arr = np.frombuffer(data, dtype=np.int32).astype(np.float32) / 2147483648.0
-    else:
-        raise ValueError(f"Unsupported sample width: {sampwidth} bytes")
-
-    if nchannels > 1:
-        arr = arr.reshape(-1, nchannels).mean(axis=1)
-    return arr.astype(np.float32, copy=False)
-
-def _resample_linear(x: np.ndarray, src_sr: int, tgt_sr: int) -> np.ndarray:
-    """Simple linear resampler for 1D float32 arrays."""
-    if src_sr == tgt_sr or x.size == 0:
-        return x
-    # target length proportional to rate
-    tgt_len = int(round(x.size * (tgt_sr / src_sr)))
-    if tgt_len <= 1:
-        return np.zeros(0, dtype=np.float32)
-    xp = np.linspace(0.0, 1.0, num=x.size, endpoint=True, dtype=np.float64)
-    fp = x.astype(np.float64, copy=False)
-    xnew = np.linspace(0.0, 1.0, num=tgt_len, endpoint=True, dtype=np.float64)
-    y = np.interp(xnew, xp, fp).astype(np.float32)
-    return y
-
-# ------------------------------
 # FileStream
 # ------------------------------
 
