@@ -8,7 +8,6 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-build/
 develop-eggs/
 dist/
 downloads/
@@ -230,5 +229,6 @@ dist-ssr
 
 *.wav
 *.mp3
+.DS_Store
 
 model_turbo*
