@@ -129,19 +129,18 @@ import torch
 from thestage_speechkit.apple import ASRPipeline
 
 model = ASRPipeline(
-    model='thestage/thewhisper-large-v3-trubo',
+    model='TheStageAI/thewhisper-large-v3-turbo',
     # optimized model with ANNA
     model_size='S'
-    model_chunk='10s',
-    device='cuda',
-    hf_token=""
+    chunk_length_s=10,
+    token=hf_token
 )
 
 # inference
 result = model(
-	audio="path_to_your_audio.wav", 
-	max_batch_size=32,
-	return_timestamps="segment"
+    "path_to_your_audio.wav", 
+    max_batch_size=32,
+    return_timestamps="word"
 )
 
 print(result["text"])
@@ -153,23 +152,26 @@ print(result["text"])
 from thestage_speechkit.apple import WhisperStreamingPipeline
 from thestage_speechkit.streaming import MicStream, FileStream, StdoutStream
 
-streaming_model = WhisperStreaming(
-	model='thewhisper-large-v3-turbo',
-	# Optimized model by ANNA
-	model_size='S',
-  # Window length
-	chunk_size='10s'
-	platform
+streaming_pipe = WhisperStreaming(
+    model='TheStageAI/thewhisper-large-v3-turbo',
+    # Optimized model by ANNA
+    model_size='S',
+    # Window length
+    chunk_length_s=10,
+    platform='apple'
 )
 
 # set stride in miliseconds
-mic_stream = MicStream(stride=500)
+mic_stream = MicStream(step_size_s=0.5)
 output_stream = StdoutStream()
 
 while True:
-	chunk = mic_stream.next_chunk()
-	approved_text, assumption = streaming_model(chunk)
-	output_stream.rewrite(approved_text, assumption)
+    chunk = mic_stream.next_chunk()
+    if chunk:
+        approved_text, assumption = streaming_pipe(chunk)
+        output_stream.rewrite(approved_text, assumption)
+    else:
+        break
 ```
 
 ### Nvidia Usage (HuggingFace Transfomers)
@@ -179,19 +181,19 @@ import torch
 from thestage_speechkit.nvidia import ASRPipeline
 
 model = ASRPipeline(
-    model='thestage/thewhisper-large-v3-trubo',
+    model='TheStageAI/thewhisper-large-v3-turbo',
     # allowed: 10s, 15s, 20s, 30s
-    model_chunk='10s',
+    chunk_length_s=10,
     # optimized TheStage AI engines
     device='cuda',
-    hf_token=""
+    token=hf_token
 )
 
 # inference
 result = model(
-	audio="path_to_your_audio.wav", 
-	max_batch_size=32,
-	return_timestamps="segment"
+    audio="path_to_your_audio.wav", 
+    max_batch_size=32,
+    return_timestamps="segment"
 )
 
 print(result["text"])
@@ -204,20 +206,20 @@ import torch
 from thestage_speechkit.nvidia import ASRPipeline
 
 model = ASRPipeline(
-    model='thestage/thewhisper-large-v3-trubo',
+    model='TheStageAI/thewhisper-large-v3-turbo',
     # allowed: 10s, 15s, 20s, 30s
-    model_chunk='10s',
+    chunk_length_s=10,
     # optimized TheStage AI engines
     mode='S',
     device='cuda',
-    hf_token=""
+    token=hf_token
 )
 
 # inference
 result = model(
-	audio="path_to_your_audio.wav", 
-	max_batch_size=32,
-	return_timestamps="segment"
+    "path_to_your_audio.wav", 
+    max_batch_size=32,
+    return_timestamps="segment"
 )
 
 print(result["text"])
