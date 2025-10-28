@@ -1,4 +1,4 @@
-from thestage_asr.apple import ASRPipeline
+from thestage_speechkit.apple import ASRPipeline
 
 pipe = ASRPipeline('TheStageAI/thewhisper-large-v3-turbo', chunk_length_s=10, model_size='S')
 print(pipe.feature_extractor)

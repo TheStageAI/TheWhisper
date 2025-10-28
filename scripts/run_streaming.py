@@ -1,4 +1,4 @@
-from thestage_asr.streaming import StreamingPipeline, MicStream, FileStream, StdoutStream
+from thestage_speechkit.streaming import StreamingPipeline, MicStream, FileStream, StdoutStream
 from transformers.utils import logging as hf_logging
 import logging, warnings
 

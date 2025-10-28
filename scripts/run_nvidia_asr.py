@@ -1,4 +1,4 @@
-from thestage_asr.nvidia import ASRPipeline
+from thestage_speechkit.nvidia import ASRPipeline
 
 generate_kwargs={
     'num_beams': 1,

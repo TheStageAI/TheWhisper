@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "thestage-asr"
+name = "thestage-speechkit"
 version = "0.1.0"
 description = "Optimized Whisper models for streaming and on-device use"
 readme = "README.md"
@@ -52,5 +52,5 @@ Issues = "https://github.com/a31m/TheWhisper/issues"
 include-package-data = true
 
 [tool.setuptools.packages.find]
-include = ["thestage_asr*"]
+include = ["thestage_speechkit*"]
 exclude = ["examples*", "scripts*", "tests*"]
