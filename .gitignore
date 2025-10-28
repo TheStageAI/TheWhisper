@@ -208,3 +208,5 @@ __marimo__/
 
 *.wav
 *.mp3
+
+model_turbo/*
