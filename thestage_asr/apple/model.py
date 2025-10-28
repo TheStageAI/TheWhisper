@@ -84,11 +84,11 @@ class ANEEncoder(BaseEncoder):
     def __init__(self, encoder_path: str):
         if encoder_path.endswith('.mlmodelc'):
             encoder = ct.models.CompiledMLModel(
-                encoder_path, #compute_units=ct.ComputeUnit.CPU_AND_NE
+                encoder_path, compute_units=ct.ComputeUnit.CPU_AND_NE
             )
         elif encoder_path.endswith('.mlpackage'):
             encoder = ct.models.MLModel(
-                encoder_path, #compute_units=ct.ComputeUnit.CPU_AND_NE
+                encoder_path, compute_units=ct.ComputeUnit.CPU_AND_NE
             )
         else:
             raise ValueError("Encoder format is not supported")
