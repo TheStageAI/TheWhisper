@@ -16,7 +16,6 @@ classifiers = [
   "Operating System :: OS Independent",
   "Intended Audience :: Developers",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
-  "Framework :: FastAPI",
 ]
 dependencies = [
   "torch==2.7.0",
