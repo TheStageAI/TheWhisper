@@ -15,6 +15,7 @@ from dataclasses import dataclass
 import coremltools as ct
 
 import pickle
+import shutil
 
 from huggingface_hub import snapshot_download
 from transformers import (
@@ -432,6 +433,7 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
 
         base_path = Path(pretrained_model_name_or_path)
         if not base_path.exists():
+            subfolder = f"free/macos_15_ios_18/{str(mode)}/{chunk_length}sec"
             snapshot_path = snapshot_download(
                 repo_id=pretrained_model_name_or_path,
                 cache_dir=cache_dir,
@@ -440,7 +442,7 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
                 force_download=force_download,
                 proxies=proxies,
                 revision=revision,
-                allow_patterns=None,
+                allow_patterns=[f"{subfolder}/**"],
                 ignore_patterns=None,
                 token=token,
             )
@@ -458,15 +460,34 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
             if enc_rel is not None:
                 p = root / enc_rel
                 if p.exists():
+                    # If user provided a zip, unzip and return extracted .mlmodelc
+                    if p.suffix == ".zip" or p.name.endswith(".mlmodelc.zip"):
+                        return _unzip_mlmodelc(p)
                     return p
             # search common CoreML compiled formats
-            for pattern in ("*.mlmodelc", "*.mlpackage"):
+            for pattern in ("*.mlmodelc.zip", "*.mlmodelc", "*.mlpackage"):
                 found = next(root.rglob(pattern), None)
                 if found is not None:
+                    if found.suffix == ".zip" or found.name.endswith(".mlmodelc.zip"):
+                        return _unzip_mlmodelc(found)
                     return found
             raise FileNotFoundError(
                 f"CoreML encoder not found under '{root}'. Provide encoder_path explicitly."
             )
+
+        def _unzip_mlmodelc(zip_path: Path) -> Path:
+            """Ensure a .mlmodelc.zip is extracted next to the archive and return the .mlmodelc dir."""
+            target_dir = zip_path.parent / zip_path.stem  # removes only .zip, leaves *.mlmodelc
+            if not target_dir.exists():
+                # Extract into parent directory to preserve inside structure
+                shutil.unpack_archive(str(zip_path), extract_dir=str(zip_path.parent))
+            # Prefer the expected target dir; otherwise, fall back to first *.mlmodelc under parent
+            if target_dir.exists():
+                return target_dir
+            fallback = next(zip_path.parent.glob("*.mlmodelc"), None)
+            if fallback is not None:
+                return fallback
+            raise FileNotFoundError(f"Failed to locate extracted .mlmodelc directory for '{zip_path}'.")
 
         def _find_decoder_path(root: Path) -> Path:
             if dec_rel is not None:
@@ -499,7 +520,10 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
         gen_config = GenerationConfig.from_pretrained(str(base_path))
 
         # Build a lightweight skeleton model from config (no HF weights download)
-        model = cls(config)
+        model_skeleton_path = base_path / "hf_model.pkl"
+        with open(str(model_skeleton_path), "rb") as f:
+            model = pickle.load(f)
+        
         if gen_config is not None:
             model.generation_config = gen_config
 
