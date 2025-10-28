@@ -52,9 +52,9 @@ apple = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/a31m/TheWhisper"
-Source = "https://github.com/a31m/TheWhisper"
-Issues = "https://github.com/a31m/TheWhisper/issues"
+Homepage = "https://github.com/TheStageAI/TheWhisper"
+Source = "https://github.com/TheStageAI/TheWhisper"
+Issues = "https://github.com/TheStageAI/TheWhisper/issues"
 
 [tool.setuptools]
 include-package-data = true
