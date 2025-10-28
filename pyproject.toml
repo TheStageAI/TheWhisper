@@ -31,10 +31,10 @@ nvidia = [
   # Provide the index at install time:
   # pip install .[nvidia] --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
   "thestage-elastic-models[nvidia]",
-  "torchaudio==2.7.0",
+  "torchaudio==2.6.0",
 ]
 apple = [
-  "torch==2.6.0",
+  "torch==2.7.0",
   "torchaudio==2.7.0",
   "transformers==4.49.0",
   "editdistance",
