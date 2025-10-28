@@ -90,6 +90,12 @@ class StreamingPipeline:
         self.current_time: float = 0.0
 
         self.audio_queue: List[np.ndarray] = []
+
+    def __call__(self, chunk: np.ndarray) -> List[Dict[str, Any]]:
+        """
+        """
+        self.add_new_chunk(chunk)
+        return self.process_new_chunk()
     
     def add_new_chunk(self, chunk: np.ndarray) -> None:
         """
@@ -219,6 +225,7 @@ class StreamingPipeline:
             'num_beams': 1,
             'do_sample': False,
             'max_new_tokens': max_new_tokens,
+            'repetition_penalty': 1.5,
         }
         
         if prefix_text is not None and len(prefix_text) > 0:

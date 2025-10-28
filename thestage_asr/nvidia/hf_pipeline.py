@@ -7,6 +7,13 @@ from transformers import WhisperForConditionalGeneration as HFWhisperForConditio
 from transformers import WhisperProcessor, WhisperFeatureExtractor, WhisperTokenizer
 
 
+def patch_hf_model(model, chunk_length_s):
+    max_source_positions = int(1500 * (chunk_length_s / 30))
+    model.config.max_source_positions = max_source_positions
+    pos_embed = model.model.encoder.embed_positions.weight
+    model.model.encoder.embed_positions.weight.data = pos_embed[-max_source_positions:]
+
+
 class ASRPipeline(AutomaticSpeechRecognitionPipeline):
     def __init__(
         self,
@@ -15,7 +22,7 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
         tokenizer: Optional[PreTrainedTokenizer] = None,
         model_size: str = None,
         chunk_length_s: int = 30,
-        device: str = "cpu",
+        device: str = "cuda",
         torch_dtype: Optional[torch.dtype] = None,
         **kwargs,
     ):
@@ -25,7 +32,7 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
             if model_size is not None:
                 from elastic_models.transformers import WhisperForConditionalGeneration
                 model = WhisperForConditionalGeneration.from_pretrained(
-                    model_name, mode=model_size, torch_dtype=torch_dtype # TODO: add chunk length in elastic models ?
+                    model_name, mode=model_size, torch_dtype=torch_dtype
                 )
             else:
                 model = HFWhisperForConditionalGeneration.from_pretrained(
@@ -50,15 +57,12 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
         super().__init__(
             model, 
             feature_extractor=feature_extractor, 
-            tokenizer=tokenizer, device=device, 
+            tokenizer=tokenizer, 
+            device=device, 
+            chunk_length_s=chunk_length_s,
             torch_dtype=torch_dtype, 
             **kwargs
         )
         if chunk_length_s < 30:
-            self._set_chunk_length(chunk_length_s)
-
-    def _set_chunk_length(self, chunk_length_s):
-        max_source_positions = int(1500 * (chunk_length_s / 30))
-        self.model.config.max_source_positions = max_source_positions
-        pos_embed = self.model.model.encoder.embed_positions.weight
-        self.model.model.encoder.embed_positions.weight.data = pos_embed[-max_source_positions:]
+            if isinstance(model, HFWhisperForConditionalGeneration):
+                patch_hf_model(model, chunk_length_s)
