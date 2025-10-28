@@ -18,10 +18,8 @@ This repository provides **open-source transcription models** with **streaming i
 It is optimized for **low-latency**, **low power usage**, and **scalable** streaming transcription. <br>
 Ideal for real-time captioning, live meetings, voice interfaces, and edge deployments.
 
-
 <img width="1547" height="877" alt="apple m2 whisper" src="https://github.com/user-attachments/assets/f9a7ed1c-6c0a-4497-accd-f9adf57f6845" />
-
-<img width="1547" height="877" alt="nvidia l40s (1)" src="https://github.com/user-attachments/assets/b78785fb-b1c3-4b1c-aa73-c32fd843cc97" />
+<img width="1547" height="877" alt="nvidia l40s (1) (1)" src="https://github.com/user-attachments/assets/680d4da7-85ff-48dc-9273-755a3be8c39c" />
 
 <details>
   <summary><strong>📖 Table of Contents</strong></summary>
@@ -70,12 +68,21 @@ Ideal for real-time captioning, live meetings, voice interfaces, and edge deploy
 
 ## 📦 Quick start
 
-### 1. Clone the repository
+### Clone the repository
 ```bash
 git clone https://github.com/TheStageAI/TheWhisper.git
 cd TheWhisper
 ```
-### 2. Install for Apple
+### Install for Apple
+```bash
+pip install .[apple]
+```
+
+### Install for Nvidia
+```bash
+pip install .[nvidia]
+```
+
 
 ## Streaming transcription
 
