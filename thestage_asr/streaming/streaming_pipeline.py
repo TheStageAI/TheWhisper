@@ -225,6 +225,7 @@ class StreamingPipeline:
             'num_beams': 1,
             'do_sample': False,
             'max_new_tokens': max_new_tokens,
+            'repetition_penalty': 1.5,
         }
         
         if prefix_text is not None and len(prefix_text) > 0:
