@@ -21,6 +21,8 @@ Ideal for real-time captioning, live meetings, voice interfaces, and edge deploy
 
 <img width="1547" height="877" alt="apple m2 whisper" src="https://github.com/user-attachments/assets/f9a7ed1c-6c0a-4497-accd-f9adf57f6845" />
 
+<img width="1547" height="877" alt="nvidia l40s (1)" src="https://github.com/user-attachments/assets/b78785fb-b1c3-4b1c-aa73-c32fd843cc97" />
+
 <details>
   <summary><strong>📖 Table of Contents</strong></summary>
 
@@ -54,7 +56,6 @@ Ideal for real-time captioning, live meetings, voice interfaces, and edge deploy
 - Simple Python API, Examples of deployment for MacOS desktop app with Electron and ReactJS
 
 
-
 ---
 
 ## 🏗️ Supported Platforms
@@ -67,9 +68,15 @@ Ideal for real-time captioning, live meetings, voice interfaces, and edge deploy
 
 ---
 
-## 📦 Installation
+## 📦 Quick start
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/your-org/your-repo.git
-cd your-repo
+git clone https://github.com/TheStageAI/TheWhisper.git
+cd TheWhisper
+```
+### 2. Install for Apple
+
+## Streaming transcription
+
+
