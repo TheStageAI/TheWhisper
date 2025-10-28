@@ -1,4 +1,4 @@
-# 🗣️ TheWhisper: High-Performance Voice AI engines
+# 🗣️ TheWhisper: High-Performance Speech-to-Text engines
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Hugging Face](https://img.shields.io/badge/🤗-Hugging%20Face%20Weights-yellow)](https://huggingface.co/)
@@ -9,8 +9,9 @@
 
 ## 🚀 Overview
 
-The goal of the repository is to share @TheStageAI
-This repository provides **open-source transcription models** with **streaming inference support** and:
+This repository aims to share and develop the most efficient speech-to-text and text-to-speech inference solution -with a strong focus on self-hosting, cloud hosting, and on-device inference across multiple devices. 
+
+For the first release this repository provides **open-source transcription models** with **streaming inference support** and:
 - Hugging Face open weights
 - High-performance TheStage AI inference engines (NVIDIA GPU)
 - CoreML engines for macOS / Apple Silicon with the lowest in the world power consumption for MacOS
@@ -18,9 +19,6 @@ This repository provides **open-source transcription models** with **streaming i
 
 It is optimized for **low-latency**, **low power usage**, and **scalable** streaming transcription. <br>
 Ideal for real-time captioning, live meetings, voice interfaces, and edge deployments.
-
-<img width="1547" height="877" alt="apple m2 whisper" src="https://github.com/user-attachments/assets/f9a7ed1c-6c0a-4497-accd-f9adf57f6845" />
-<img width="1547" height="877" alt="nvidia l40s (1) (1)" src="https://github.com/user-attachments/assets/680d4da7-85ff-48dc-9273-755a3be8c39c" />
 
 <details>
   <summary><strong>📖 Table of Contents</strong></summary>
@@ -54,16 +52,8 @@ Ideal for real-time captioning, live meetings, voice interfaces, and edge deploy
 - Benchmarks: latency, memory, power, and ASR accuracy (OpenASR)
 - Simple Python API, Examples of deployment for MacOS desktop app with Electron and ReactJS
 
-
----
-
-## 🏗️ Supported Platforms
-
-| Platform                 | Engine Type               | Status     | License                                 |
-|--------------------------|---------------------------|------------|-----------------------------------------|
-| NVIDIA GPUs (CUDA)       | TheStage AI (Optimized) | ✅ Stable  | Free ≤ 4 GPUs/year for small orgs       |
-| NVIDIA GPUs (CUDA)       | Pytorch HF Transformers | ✅ Stable  | Free                                    |
-| macOS / Apple Silicon    | CoreML Engine + MLX     | ✅ Stable  | Free                                    |
+<img width="1547" height="877" alt="apple m2 whisper" src="https://github.com/user-attachments/assets/f9a7ed1c-6c0a-4497-accd-f9adf57f6845" />
+<img width="1547" height="877" alt="nvidia l40s (1) (1)" src="https://github.com/user-attachments/assets/680d4da7-85ff-48dc-9273-755a3be8c39c" />
 
 ---
 
@@ -84,7 +74,67 @@ pip install .[apple]
 pip install .[nvidia]
 ```
 
+### Install for Nvidia with TheStage AI optmized engines
+```bash
+pip install .[nvidia]
+pip install thestage
+pip install thestage_elastic_models[nvidia] --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
+# additional dependencies
+pip install flash_attn==2.8.2 --no-build-isolation
+```
 
-## Streaming transcription
+Then generate access token on [TheStage AI Platform](https://app.thestage.ai) in your profile and execute the following command:
+```bash
+thestage config set --api-token <YOUR_API_TOKEN>
+```
+
+## 🏗️ Support Matrix and System Requirements
+
+| **Feature** | **whisper-large-v3 (Nvidia)** | **whisper-large-v3 (Apple)** | **whisper-large-v3-turbo (Nvidia)** | **whisper-large-v3-turbo (Apple)** |
+| --- | --- | --- | --- | --- |
+| Streaming | ❌ | ✅ | ❌ | ✅ |
+| Accelerated | ✅ | ✅ | ✅ | ✅ |
+| Word Timestamps | ❌ | ✅ | ❌ | ✅ |
+| Multilingual | ✅ | ✅ | ✅ | ✅ |
+| 10s Chunk Mode | ✅ | ✅ | ✅ | ✅ |
+| 15s Chunk Mode | ✅ | ✅ | ✅ | ✅ |
+| 20s Chunk Mode | ✅ | ✅ | ✅ | ✅ |
+| 30s Chunk Mode | ✅ | ✅ | ✅ | ✅ |
+
+### Nvidia GPU Requirements
+
+- **Supported GPUs:** RTX 4090, L40s
+- **Operating System:** Ubuntu 20.04+
+- **Minimum RAM:** 2.5 GB (5 GB recommended for large-v3 model)
+- **CUDA Version:** 11.8 or higher
+- **Driver Version:** 520.0 or higher
+- **Python version**: 3.10-3.12
+
+### Apple Silicon Requirements
+
+- **Supported Chipsets:** M1, M1 Pro, M1 Max, M1 Ultra, M2, M2 Pro, M2 Max, M2 Ultra, M3, M3 Pro, M3 Max, M4, M4 Pro, M4 Max
+- **Operating System:** macOS 15.0 (Ventura) or later, iOS 18.0 or later
+- **Minimum RAM:** 2 GB (4 GB recommended for large-v3 model)
+- **Python version**: 3.10-3.12
+
+---
+
+## ▶️ Usage / Deployment
+
+### Streaming transcription
+
+## 💻 Build On-Device Desktop Application for Apple
+
+## 🏢 Enterprise License Summary
+
+| Platform                 | Engine Type               | Status     | License                                 |
+|--------------------------|---------------------------|------------|-----------------------------------------|
+| NVIDIA GPUs (CUDA)       | TheStage AI (Optimized) | ✅ Stable  | Free ≤ 4 GPUs/year for small orgs       |
+| NVIDIA GPUs (CUDA)       | Pytorch HF Transformers | ✅ Stable  | Free                                    |
+| macOS / Apple Silicon    | CoreML Engine + MLX     | ✅ Stable  | Free                                    |
+
+----
+
+## 🙌 Acknowledgements
 
 
