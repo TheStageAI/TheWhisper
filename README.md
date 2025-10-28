@@ -24,18 +24,14 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 
 - [🚀 Overview](#-overview)
 - [✨ Features](#-features)
-- [🏗️ Supported Platforms](#️-supported-platforms)
-- [📦 Installation](#-installation)
 - [⚡ Quick Start](#-quick-start)
-- [📈 Benchmarks](#-benchmarks)
+- [🛠️ Support Matrix](#-support-matrix)
+- [🖥️ Build On-Device Desktop Application for Apple](#-build-on-device-desktop-application-for-apple)
+- [📊 Quality Benchmarks](#-quality-benchmarks)
   - [🍏 Apple Silicon Benchmarks](apple_benchmarks.md)
   - [⚡ NVIDIA GPU Benchmarks](nvidia_benchmarks.md)
-- [📜 License](#-license)
 - [🏢 Enterprise License Summary](#-enterprise-license-summary)
-- [🧪 Evaluation](#-evaluation)
-- [🤝 Contributing](#-contributing)
 - [🙌 Acknowledgements](#-acknowledgements)
-- [📬 Contact](#-contact)
 
 </details>
 
@@ -76,9 +72,8 @@ pip install .[nvidia]
 
 ### Install for Nvidia with TheStage AI optmized engines
 ```bash
-pip install .[nvidia]
+pip install .[nvidia_thestage] --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
 pip install thestage
-pip install thestage_elastic_models[nvidia] --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
 # additional dependencies
 pip install flash_attn==2.8.2 --no-build-isolation
 ```
@@ -229,10 +224,7 @@ print(result["text"])
 ## 💻 Build On-Device Desktop Application for Apple
 
 You can build a macOS desktop app with real-time transcription. Find a simple ReactJS application here: **Link to React Frontend**
-You can also download our app built using this backend here: **ADD LINK TO APP**
-
-
-https://github.com/user-attachments/assets/093c1442-faa5-4bb5-9885-cffd1dda1aa2
+You can also download our app built using this backend here: [TheNotes for macOS](https://cdn.thestage.ai/production/cms_file_upload/1761693601-8ef0605f-a2e0-4bef-97c1-b61452e4f7dc/The%20Notes%20Package%20Oct%2028%202025.pkg)
 
 -----
 
