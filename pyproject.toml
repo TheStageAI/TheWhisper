@@ -18,9 +18,6 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-  "torch==2.7.0",
-  "torchaudio==2.7.0",
-  "transformers==4.49.0",
   "editdistance",
   "librosa",
   "fastapi",
@@ -34,8 +31,18 @@ nvidia = [
   # Provide the index at install time:
   # pip install .[nvidia] --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
   "thestage-elastic-models[nvidia]",
+  "torchaudio==2.7.0",
 ]
 apple = [
+  "torch==2.7.0",
+  "torchaudio==2.7.0",
+  "transformers==4.49.0",
+  "editdistance",
+  "librosa",
+  "fastapi",
+  "uvicorn",
+  "python-multipart",
+  "sounddevice",
   "mlx==0.25.2",
   "coremltools==8.3.0",
   "mlx_whisper==0.4.2",
