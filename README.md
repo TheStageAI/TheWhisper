@@ -236,7 +236,7 @@ https://github.com/user-attachments/assets/093c1442-faa5-4bb5-9885-cffd1dda1aa2
 
 ## 📊 Quality Benchmarks
 
-TheWhisper is a fine-tuned Whisper model that can process audio chunks of any size up to 30 seconds. Unlike the original Whisper models, it doesn't require padding audio with silence to reach 30 seconds. We conducted quality benchmarking across different chunk sizes: 10, 15, 20, and 30 seconds. For quality benchmarks, we used the [Open ASR Leaderboard](https://github.com/huggingface/open_asr_leaderboard#evaluate-a-model)
+TheWhisper is a fine-tuned Whisper model that can process audio chunks of any size up to 30 seconds. Unlike the original Whisper models, it doesn't require padding audio with silence to reach 30 seconds. We conducted quality benchmarking across different chunk sizes: 10, 15, 20, and 30 seconds. For quality benchmarks, we used the multilingual benchmarks [Open ASR Leaderboard](https://github.com/huggingface/open_asr_leaderboard#evaluate-a-model).
 
 <img width="1547" height="531" alt="vanilla whisper (1)" src="https://github.com/user-attachments/assets/f0c86e58-d834-4ac7-a06b-df3a7ae3e9e9" />
 <img width="1547" height="458" alt="TheStage AI Whisper (1)" src="https://github.com/user-attachments/assets/17fb45a3-b33d-4c83-b843-69b0f0aa3f65" />
@@ -244,12 +244,42 @@ TheWhisper is a fine-tuned Whisper model that can process audio chunks of any si
 
 ### 10s chunks
 
-| Model | voxpopuli_test | tedlium_test | spgispeech_test | librispeech_test.other | librispeech_test.clean | gigaspeech_test | earnings22_test | ami_test | Mean WER |
-|-------|-----------------|--------------|-----------------|------------------------|------------------------|-----------------|------------------|----------|----------|
-| openai/whisper-large-v3-turbo (original) | 10.01 | 3.69 | 2.97 | 4.36 | 2.39 | 10.12 | 12.47 | 16.49 | 7.81 |
-| openai/whisper-large-v3-turbo (truncated features) | 8.19 | 4.73 | 4.68 | 7.74 | 3.03 | 12.20 | 16.09 | 24.58 | 10.16 |
-| **the-whisper-large-v3-turbo** | 7.41 | 3.88 | 3.11 | 4.84 | 2.44 | 10.61 | 12.88 | 17.86 | 7.88 |
+| Model | Mean WER |
+|-------|-----------------|
+| openai/whisper-large-v3-turbo | 7.81 |
+| openai/whisper-large-v3 | 7.45 |
+| thewhisper-large-v3-turbo | 7.88 |
+| thewhisper-large-v3 | 7.8 |
 
+
+### 15s chunks
+
+| Model | Mean WER |
+|-------|-----------------|
+| openai/whisper-large-v3-turbo | 7.61 |
+| openai/whisper-large-v3 | 7.22 |
+| thewhisper-large-v3-turbo | 7.45 |
+| thewhisper-large-v3 | 7.34 |
+
+### 20s chunks
+
+| Model | Mean WER |
+|-------|-----------------|
+| openai/whisper-large-v3-turbo | 7.63 |
+| openai/whisper-large-v3 | 7.29 |
+| thewhisper-large-v3-turbo | 7.47 |
+| thewhisper-large-v3 | 7.31 |
+
+### 30s chunks
+
+| Model | Mean WER |
+|-------|-----------------|
+| openai/whisper-large-v3-turbo | 7.61 |
+| openai/whisper-large-v3 | 7.32 |
+| thewhisper-large-v3-turbo | 7.45 |
+| thewhisper-large-v3 | 7.28 |
+
+---
 
 ## 🏢 Enterprise License Summary
 
