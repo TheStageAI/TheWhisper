@@ -88,6 +88,7 @@ Then generate access token on [TheStage AI Platform](https://app.thestage.ai) in
 ```bash
 thestage config set --api-token <YOUR_API_TOKEN>
 ```
+-----
 
 ## 🏗️ Support Matrix and System Requirements
 
@@ -222,9 +223,28 @@ result = model(
 
 print(result["text"])
 ```
-
+-----
 
 ## 💻 Build On-Device Desktop Application for Apple
+
+You can build a macOS desktop app with real-time transcription. Find a simple ReactJS application here: **Link to React Frontend**
+You can also download our app built using this backend here: **ADD LINK TO APP**
+
+
+https://github.com/user-attachments/assets/093c1442-faa5-4bb5-9885-cffd1dda1aa2
+
+-----
+
+## 📊 Quality Benchmarks
+
+### 10s chunks
+
+| Model | voxpopuli_test | tedlium_test | spgispeech_test | librispeech_test.other | librispeech_test.clean | gigaspeech_test | earnings22_test | ami_test | Mean WER |
+|-------|-----------------|--------------|-----------------|------------------------|------------------------|-----------------|------------------|----------|----------|
+| openai/whisper-large-v3-turbo (original) | 10.01 | 3.69 | 2.97 | 4.36 | 2.39 | 10.12 | 12.47 | 16.49 | 7.81 |
+| openai/whisper-large-v3-turbo (truncated features) | 8.19 | 4.73 | 4.68 | 7.74 | 3.03 | 12.20 | 16.09 | 24.58 | 10.16 |
+| **the-whisper-large-v3-turbo** | 7.41 | 3.88 | 3.11 | 4.84 | 2.44 | 10.61 | 12.88 | 17.86 | 7.88 |
+
 
 ## 🏢 Enterprise License Summary
 
