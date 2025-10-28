@@ -14,7 +14,6 @@ hf_logging.disable_progress_bar()
 logging.getLogger("transformers").setLevel(logging.ERROR)
 # Silence specific runtime UserWarnings
 warnings.filterwarnings("ignore", message=r"Whisper did not predict an ending timestamp.*", category=UserWarning)
-warnings.filterwarnings("ignore", message=r"Keyword arguments .* not recognized.*", category=UserWarning)
 
 streaming_model = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
