@@ -4,7 +4,6 @@ chunk_length_s = 10
 pipe = BatchedASRPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
     chunk_length_s=chunk_length_s,
-    model_size='S',
     device='cuda',
 )
 generate_kwargs={
