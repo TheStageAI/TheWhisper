@@ -1,4 +1,4 @@
-# 🗣️ TheWhisper: High-Performance Speech-to-Text Engine
+# 🗣️ TheWhisper: High-Performance Voice AI engines
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Hugging Face](https://img.shields.io/badge/🤗-Hugging%20Face%20Weights-yellow)](https://huggingface.co/)
@@ -9,6 +9,7 @@
 
 ## 🚀 Overview
 
+The goal of the repository is to share @TheStageAI
 This repository provides **open-source transcription models** with **streaming inference support** and:
 - Hugging Face open weights
 - High-performance TheStage AI inference engines (NVIDIA GPU)
