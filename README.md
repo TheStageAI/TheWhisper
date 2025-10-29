@@ -288,7 +288,7 @@ TheWhisper is a fine-tuned Whisper model that can process audio chunks of any si
 
 ## 🙌 Acknowledgements
 
-- **Silero VAD**: Used for voice activity detection in `thestage_speechkit/vad.py`. See `https://github.com/snakers4/silero-vad`.
-- **OpenAI Whisper**: Original Whisper model and pretrained checkpoints. See `https://github.com/openai/whisper`.
-- **Hugging Face Transformers**: Model, tokenizer, and inference utilities. See `https://github.com/huggingface/transformers`.
-- **MLX community**: MLX Whisper implementation for Apple Silicon. See `https://github.com/ml-explore/mlx-examples/tree/main/whisper`.
+- **Silero VAD**: Used for voice activity detection in `thestage_speechkit/vad.py`. See [https://github.com/snakers4/silero-vad].
+- **OpenAI Whisper**: Original Whisper model and pretrained checkpoints. See [https://github.com/openai/whisper].
+- **Hugging Face Transformers**: Model, tokenizer, and inference utilities. See [https://github.com/huggingface/transformers].
+- **MLX community**: MLX Whisper implementation for Apple Silicon. See [https://github.com/ml-explore/mlx-examples/tree/main/whisper].
