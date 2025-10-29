@@ -28,7 +28,7 @@ class StreamingPipeline:
         model: str,
         model_size: str = 'S',
         chunk_length_s: int = 10,
-        use_vad: bool = True,
+        use_vad: bool = False,
         agreement_history_size: int = 2,
         agreement_majority_threshold: int = 2,
         platform: str = 'apple',
