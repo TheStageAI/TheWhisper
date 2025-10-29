@@ -67,9 +67,7 @@ class StreamingPipeline:
         if use_vad:
             from ..vad import FixedVADIterator
             vad_model, _ = torch.hub.load(
-                repo_or_dir=model+'/snakers4_silero-vad_master',
-                model='silero_vad',
-                source='local'
+                repo_or_dir='snakers4/silero-vad', model='silero_vad'
             )
             self.vad = FixedVADIterator(
                 vad_model, 
