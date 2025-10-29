@@ -2,8 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Hugging Face](https://img.shields.io/badge/🤗-Hugging%20Face%20Weights-yellow)](https://huggingface.co/TheStageAI/thewhisper-large-v3-turbo/)
-[![NVIDIA](https://img.shields.io/badge/NVIDIA-GPU-green.svg)](#usage)
-[![Apple Silicon](https://img.shields.io/badge/Apple-Silicon-black.svg)](#usage)
+[![NVIDIA](https://img.shields.io/badge/NVIDIA-GPU-green.svg)](#usage-deployment)
+[![Apple Silicon](https://img.shields.io/badge/Apple-Silicon-black.svg)](#usage-deployment)
 
 <img width="1500" height="440" alt="the whisper (6)" src="https://github.com/user-attachments/assets/a86c98a7-c587-40cb-9ed3-d3b5ba5e76f2" />
 
@@ -15,7 +15,7 @@ For the first release this repository provides **open-source transcription model
 - Hugging Face open weights
 - High-performance TheStage AI inference engines (NVIDIA GPU)
 - CoreML engines for macOS / Apple Silicon with the lowest in the world power consumption for MacOS
-- Local RestAPI with frontend examples using ReactJS and Electron
+- Local RestAPI with frontend examples using ReactJS and Electron [see for details](electron_app/README.md)
 
 It is optimized for **low-latency**, **low power usage**, and **scalable** streaming transcription. Ideal for real-time captioning, live meetings, voice interfaces, and edge deployments.
 
@@ -288,4 +288,7 @@ TheWhisper is a fine-tuned Whisper model that can process audio chunks of any si
 
 ## 🙌 Acknowledgements
 
-
+- **Silero VAD**: Used for voice activity detection in `thestage_speechkit/vad.py`. See `https://github.com/snakers4/silero-vad`.
+- **OpenAI Whisper**: Original Whisper model and pretrained checkpoints. See `https://github.com/openai/whisper`.
+- **Hugging Face Transformers**: Model, tokenizer, and inference utilities. See `https://github.com/huggingface/transformers`.
+- **MLX community**: MLX Whisper implementation for Apple Silicon. See `https://github.com/ml-explore/mlx-examples/tree/main/whisper`.
