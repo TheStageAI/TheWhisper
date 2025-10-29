@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore", message=r"Whisper did not predict an ending ti
 streaming_model = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
     chunk_length_s=10,
-    use_vad=False,
+    use_vad=True,
     platform='apple',
 )
 
@@ -30,13 +30,11 @@ else:
     )
 
 output_stream = StdoutStream()
-all_approved = []
 while True:
     chunk = audio_stream.next_chunk()
     if chunk is not None:
         approved, assumption = streaming_model(chunk)
-        all_approved += approved
-        output_stream.write(all_approved, assumption)
+        output_stream.write(approved, assumption)
     else:
         break
 
