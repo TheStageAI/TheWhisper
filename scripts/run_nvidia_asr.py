@@ -1,3 +1,4 @@
+from librosa import load, resample
 from thestage_speechkit.nvidia import ASRPipeline
 
 generate_kwargs={
@@ -9,7 +10,14 @@ generate_kwargs={
 chunk_length_s = 10
 pipe = ASRPipeline(
     'TheStageAI/thewhisper-large-v3-turbo', 
-    chunk_length_s=chunk_length_s, model_size='S', device='cuda'
+    chunk_length_s=chunk_length_s, 
+    model_size='S', device='cuda'
 )
-output = pipe('example_speech.wav', generate_kwargs=generate_kwargs)
+audio, sr = load('example_speech.wav')
+audio = resample(audio, orig_sr=sr, target_sr=16000)
+output = pipe(
+    audio,
+    generate_kwargs=generate_kwargs,
+    chunk_length_s=chunk_length_s,
+)
 print(output)
