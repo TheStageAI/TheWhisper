@@ -22,7 +22,6 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
     ):
         if type(model) is str:
             model_name = model
-            
             config = WhisperConfig.from_pretrained(model_name)
             model = TheWhisperForConditionalGeneration.from_pretrained(
                 model_name, 
@@ -30,16 +29,11 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
                 chunk_length=chunk_length_s,
                 torch_dtype=torch_dtype
             )
-            
-            if feature_extractor is None:
-                feature_extractor = WhisperFeatureExtractor.from_pretrained(
-                    model_name, torch_dtype=torch_dtype, chunk_length=chunk_length_s
-                )
-            
-            if tokenizer is None:
-                tokenizer = WhisperTokenizer.from_pretrained(
-                    model_name, torch_dtype=torch_dtype
-                )
+            processor = WhisperProcessor.from_pretrained(
+                model_name, chunk_length=chunk_length_s
+            )
+            feature_extractor = processor.feature_extractor
+            tokenizer = processor.tokenizer
         else:
             if feature_extractor is None:
                 raise ValueError("feature_extractor must be provided when passing a model instance")
@@ -50,11 +44,11 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
             model, 
             feature_extractor=feature_extractor, 
             tokenizer=tokenizer, device=device, 
+            chunk_length_s=chunk_length_s,
             torch_dtype=torch_dtype, 
             **kwargs
         )
-        if chunk_length_s < 30:
-            self._set_chunk_length(chunk_length_s)
+        self._set_chunk_length(chunk_length_s)
 
     def _set_chunk_length(self, chunk_length_s):
         max_source_positions = int(1500 * (chunk_length_s / 30))
