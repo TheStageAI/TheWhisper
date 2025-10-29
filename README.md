@@ -27,7 +27,7 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - [✨ Features](#-features)
 - [⚡ Quick Start](#-quick-start)
 - [🛠️ Support Matrix](#-support-matrix-and-system-requirements)
-- [💡 Usage](#-usage-deployment)
+- [💡 Usage](#-usage-and-deployment)
 - [🖥️ Build On-Device Desktop Application for Apple](#-build-on-device-desktop-application-for-apple)
 - [📊 Quality Benchmarks](#-quality-benchmarks)
 - [🏢 Enterprise License Summary](#-enterprise-license-summary)
@@ -115,7 +115,7 @@ thestage config set --api-token <YOUR_API_TOKEN>
 
 ---
 
-## ▶️ Usage / Deployment
+## ▶️ Usage and Deployment
 
 ### Apple Usage
 
