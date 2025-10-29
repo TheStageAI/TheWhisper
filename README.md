@@ -15,8 +15,8 @@ For the first release this repository provides **open-source transcription model
 - Hugging Face open weights for whisper models with a flexible chunk size (original models have 30s)
 - High-performance TheStage AI inference engines (NVIDIA GPU), 220 tok/s on L40s for whisper-large-v3 model.
 - CoreML engines for macOS / Apple Silicon with the lowest in the world power consumption for MacOS
-- Local RestAPI with frontend examples using ReactJS and Electron [see for details](electron_app/README.md)
-- Electron demo app built by TheStage AI (Certified by Apple): [TheNotes for macOS](https://cdn.thestage.ai/production/cms_file_upload/1761693601-8ef0605f-a2e0-4bef-97c1-b61452e4f7dc/The%20Notes%20Package%20Oct%2028%202025.pkg)
+- Local RestAPI with frontend examples using JS and Electron [see for details](electron_app/README.md)
+- Electron demo app built by TheStage AI (Certified by Apple): [TheNotes for macOS](https://cdn.thestage.ai/production/cms_file_upload/1761746543-88b5430a-5897-4348-b031-8a1101352c72/The Notes.pkg)
 
 https://github.com/user-attachments/assets/f4d3fe7b-e2c5-42ff-a5d0-fef6afd11684
 
