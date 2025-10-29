@@ -1,14 +1,12 @@
 import torch
-from transformers import pipeline, Pipeline
 import os
 import numpy as np
 from time import time
 from typing import List, Dict, Optional, Union, Any
-import gc
-from scipy.io.wavfile import write
+from transformers.utils import logging as hf_logging
 
 from .local_agreement import LocalAgreement
-from transformers.utils import logging as hf_logging
+from ..vad import batched_vad
 
 import logging
 
@@ -65,17 +63,11 @@ class StreamingPipeline:
         self.speech_threshold: float = 0.5
 
         if use_vad:
-            from ..vad import FixedVADIterator
-            vad_model, _ = torch.hub.load(
+            self.vad_model, _ = torch.hub.load(
                 repo_or_dir='snakers4/silero-vad', model='silero_vad'
             )
-            self.vad = FixedVADIterator(
-                vad_model, 
-                threshold=self.speech_threshold, 
-                sampling_rate=self.sample_rate
-            )
         else:
-            self.vad = None
+            self.vad_model = None
 
         self.local_agreement = LocalAgreement(
             history_size=agreement_history_size,
@@ -120,10 +112,12 @@ class StreamingPipeline:
         contains_speech: bool = True
         self.current_time += len(chunk) / self.sample_rate
 
-        if self.vad is not None:
-            contains_speech = self.vad(chunk)
-            self.vad.reset_states()
-
+        if self.vad_model is not None:
+            contains_speech = batched_vad(
+                self.vad_model, chunk, 
+                sampling_rate=self.sample_rate, 
+                threshold=self.speech_threshold
+            )
             if not contains_speech:
                 self.no_speech_streak += 1
             else:
