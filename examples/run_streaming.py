@@ -18,8 +18,7 @@ warnings.filterwarnings("ignore", message=r"Whisper did not predict an ending ti
 streaming_model = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
     chunk_length_s=10,
-    use_vad=True,
-    platform='apple',
+    platform='apple'
 )
 
 if args.use_mic:
