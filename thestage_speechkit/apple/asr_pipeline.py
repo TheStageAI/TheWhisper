@@ -1,9 +1,9 @@
 import torch
 from typing import Union, Optional
 from transformers import (
-    AutomaticSpeechRecognitionPipeline, SequenceFeatureExtractor, PreTrainedTokenizer
+    AutomaticSpeechRecognitionPipeline, SequenceFeatureExtractor, PreTrainedTokenizer,
+    WhisperProcessor, WhisperFeatureExtractor, WhisperTokenizer, WhisperConfig
 )
-from transformers import WhisperProcessor, WhisperFeatureExtractor, WhisperTokenizer
 
 from .model import TheWhisperForConditionalGeneration
 
@@ -22,7 +22,8 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
     ):
         if type(model) is str:
             model_name = model
-
+            
+            config = WhisperConfig.from_pretrained(model_name)
             model = TheWhisperForConditionalGeneration.from_pretrained(
                 model_name, 
                 mode=model_size, 
