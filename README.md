@@ -128,8 +128,7 @@ model = ASRPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
     # optimized model with ANNA
     model_size='S'
-    chunk_length_s=10,
-    token=hf_token
+    chunk_length_s=10
 )
 
 # inference
@@ -181,8 +180,7 @@ model = ASRPipeline(
     # allowed: 10s, 15s, 20s, 30s
     chunk_length_s=10,
     # optimized TheStage AI engines
-    device='cuda',
-    token=hf_token
+    device='cuda'
 )
 
 # inference
@@ -207,8 +205,7 @@ model = ASRPipeline(
     chunk_length_s=10,
     # optimized TheStage AI engines
     mode='S',
-    device='cuda',
-    token=hf_token
+    device='cuda'
 )
 
 # inference
