@@ -15,7 +15,7 @@ For the first release this repository provides **open-source transcription model
 - Hugging Face open weights
 - High-performance TheStage AI inference engines (NVIDIA GPU)
 - CoreML engines for macOS / Apple Silicon with the lowest in the world power consumption for MacOS
-- Local RestAPI with frontend examples using ReactJS and Electron
+- Local RestAPI with frontend examples using ReactJS and Electron [see for details](electron_app/README.md)
 
 It is optimized for **low-latency**, **low power usage**, and **scalable** streaming transcription. Ideal for real-time captioning, live meetings, voice interfaces, and edge deployments.
 
