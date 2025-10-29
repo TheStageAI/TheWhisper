@@ -29,11 +29,8 @@ dependencies = [
 
 [project.optional-dependencies]
 nvidia = [
-  # Provide the index at install time:
-  # pip install .[nvidia] --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
   "torch==2.6.0",
-  "thestage-elastic-models[nvidia]",
-  "transformers==4.49.0",
+  "transformers==4.52.3",
   "torchaudio==2.6.0",
   "tensorrt==10.6.0.post2",
   "tensorrt-cu12==10.6.0.post2",
