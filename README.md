@@ -186,8 +186,7 @@ model = ASRPipeline(
 # inference
 result = model(
     audio="path_to_your_audio.wav", 
-    max_batch_size=32,
-    return_timestamps="segment"
+    max_batch_size=32
 )
 
 print(result["text"])
@@ -211,8 +210,7 @@ model = ASRPipeline(
 # inference
 result = model(
     "path_to_your_audio.wav", 
-    max_batch_size=32,
-    return_timestamps="segment"
+    max_batch_size=32
 )
 
 print(result["text"])
