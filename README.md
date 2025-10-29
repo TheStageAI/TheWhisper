@@ -1,9 +1,9 @@
-# 🗣️ TheWhisper: High-Performance Speech-to-Text engines
+# TheWhisper: High-Performance Speech-to-Text
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Hugging Face](https://img.shields.io/badge/🤗-Hugging%20Face%20Weights-yellow)](https://huggingface.co/)
-[![NVIDIA](https://img.shields.io/badge/NVIDIA-GPU-green.svg)]()
-[![Apple Silicon](https://img.shields.io/badge/Apple-Silicon-black.svg)]()
+[![Hugging Face](https://img.shields.io/badge/🤗-Hugging%20Face%20Weights-yellow)](https://huggingface.co/TheStageAI/thewhisper-large-v3-turbo/)
+[![NVIDIA](https://img.shields.io/badge/NVIDIA-GPU-green.svg)](#usage)
+[![Apple Silicon](https://img.shields.io/badge/Apple-Silicon-black.svg)](#usage)
 
 <img width="1500" height="440" alt="the whisper (6)" src="https://github.com/user-attachments/assets/a86c98a7-c587-40cb-9ed3-d3b5ba5e76f2" />
 
@@ -25,7 +25,8 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - [🚀 Overview](#-overview)
 - [✨ Features](#-features)
 - [⚡ Quick Start](#-quick-start)
-- [🛠️ Support Matrix](#-support-matrix)
+- [🛠️ Support Matrix](#-support-matrix-and-system-requirements)
+- [💡 Usage](#usage-deployment)
 - [🖥️ Build On-Device Desktop Application for Apple](#-build-on-device-desktop-application-for-apple)
 - [📊 Quality Benchmarks](#-quality-benchmarks)
   - [🍏 Apple Silicon Benchmarks](apple_benchmarks.md)
