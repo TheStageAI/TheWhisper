@@ -12,29 +12,30 @@
 This repository aims to share and develop the most efficient speech-to-text and text-to-speech inference solution -with a strong focus on self-hosting, cloud hosting, and on-device inference across multiple devices. 
 
 For the first release this repository provides **open-source transcription models** with **streaming inference support** and:
-- Hugging Face open weights
-- High-performance TheStage AI inference engines (NVIDIA GPU)
+- Hugging Face open weights for whisper models with a flexible chunk size (original models have 30s)
+- High-performance TheStage AI inference engines (NVIDIA GPU), 220 tok/s on L40s for whisper-large-v3 model.
 - CoreML engines for macOS / Apple Silicon with the lowest in the world power consumption for MacOS
 - Local RestAPI with frontend examples using ReactJS and Electron [see for details](electron_app/README.md)
+- Electron demo app built by TheStage AI (Certified by Apple): [TheNotes for macOS](https://cdn.thestage.ai/production/cms_file_upload/1761693601-8ef0605f-a2e0-4bef-97c1-b61452e4f7dc/The%20Notes%20Package%20Oct%2028%202025.pkg)
+
+https://github.com/user-attachments/assets/f4d3fe7b-e2c5-42ff-a5d0-fef6afd11684
 
 It is optimized for **low-latency**, **low power usage**, and **scalable** streaming transcription. Ideal for real-time captioning, live meetings, voice interfaces, and edge deployments.
 
-<details>
-  <summary><strong>📖 Table of Contents</strong></summary>
-
-- [🚀 Overview](#-overview)
+<!-- <details>
+  <summary><strong>📖 Table of Contents</strong></summary> -->
+## 📖 Table of Contents
 - [✨ Features](#-features)
 - [⚡ Quick Start](#-quick-start)
-- [🛠️ Support Matrix](#-support-matrix-and-system-requirements)
-- [💡 Usage](#usage-deployment)
+- [🛠️ Support Matrix](#%EF%B8%8F-support-matrix-and-system-requirements)
+- [💡 Usage](#%EF%B8%8F-usage-and-deployment)
 - [🖥️ Build On-Device Desktop Application for Apple](#-build-on-device-desktop-application-for-apple)
 - [📊 Quality Benchmarks](#-quality-benchmarks)
-  - [🍏 Apple Silicon Benchmarks](apple_benchmarks.md)
-  - [⚡ NVIDIA GPU Benchmarks](nvidia_benchmarks.md)
 - [🏢 Enterprise License Summary](#-enterprise-license-summary)
+- [🏃 Ongoing Development](#-ongoing-development)
 - [🙌 Acknowledgements](#-acknowledgements)
 
-</details>
+<!-- </details> -->
 
 ---
 
@@ -116,7 +117,7 @@ thestage config set --api-token <YOUR_API_TOKEN>
 
 ---
 
-## ▶️ Usage / Deployment
+## ▶️ Usage and Deployment
 
 ### Apple Usage
 
@@ -273,18 +274,29 @@ TheWhisper is a fine-tuned Whisper model that can process audio chunks of any si
 
 ## 🏢 Enterprise License Summary
 
+To get commercial license for bigger number of GPUs to use TheStage AI optimized engines please contact us here: [Service request](https://app.thestage.ai/contact)
+
 | Platform                 | Engine Type               | Status     | License                                 |
 |--------------------------|---------------------------|------------|-----------------------------------------|
-| NVIDIA GPUs (CUDA)       | TheStage AI (Optimized) | ✅ Stable  | Free ≤ 4 GPUs/year for small orgs       |
 | NVIDIA GPUs (CUDA)       | Pytorch HF Transformers | ✅ Stable  | Free                                    |
 | macOS / Apple Silicon    | CoreML Engine + MLX     | ✅ Stable  | Free                                    |
+| NVIDIA GPUs (CUDA)       | TheStage AI (Optimized) | ✅ Stable  | Free ≤ 4 GPUs/year for small orgs       |
+
+----
+
+## 🏃 Ongoing development
+
+- Ready-to-go containers for inference on Nvidia GPUs with OpenAI compatible API
+- Nvidia Jetson support
+- Time stamps support on Nvidia
+- Streaming containers for Nvidia
+- Speaker diarization, speaker identification
 
 ----
 
 ## 🙌 Acknowledgements
 
-
-- **Silero VAD**: Used for voice activity detection in `thestage_speechkit/vad.py`. See https://github.com/snakers4/silero-vad.
-- **OpenAI Whisper**: Original Whisper model and pretrained checkpoints. See https://github.com/openai/whisper.
-- **Hugging Face Transformers**: Model, tokenizer, and inference utilities. See https://github.com/huggingface/transformers.
-- **MLX community**: MLX Whisper implementation for Apple Silicon. See https://github.com/ml-explore/mlx-examples/tree/main/whisper.
+- **Silero VAD**: Used for voice activity detection in `thestage_speechkit/vad.py`. See [@snakers4](https://github.com/snakers4/silero-vad).
+- **OpenAI Whisper**: Original Whisper model and pretrained checkpoints. See [@openai](https://github.com/openai/whisper).
+- **Hugging Face Transformers**: Model, tokenizer, and inference utilities. See [@transformers](https://github.com/huggingface/transformers).
+- **MLX community**: MLX Whisper implementation for Apple Silicon. See [@mlx-explore](https://github.com/ml-explore/mlx-examples/tree/main/whisper).
