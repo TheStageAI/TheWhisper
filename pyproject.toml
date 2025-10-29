@@ -29,6 +29,7 @@ dependencies = [
 [project.optional-dependencies]
 nvidia = [
   "torch==2.6.0",
+  transformers==4.49.0,
   "torchaudio==2.6.0",
   "tensorrt==10.6.0.post2",
   "tensorrt-cu12==10.6.0.post2",
