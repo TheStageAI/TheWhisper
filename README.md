@@ -74,7 +74,8 @@ pip install .[nvidia]
 
 ### Install for Nvidia with TheStage AI optmized engines
 ```bash
-pip install .[nvidia] --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
+pip install .[nvidia]
+pip install thestage-elastic-models[nvidia] --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
 pip install thestage
 # additional dependencies
 pip install flash_attn==2.8.2 --no-build-isolation
