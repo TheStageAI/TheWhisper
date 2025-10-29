@@ -218,12 +218,14 @@ class StdoutStream:
         self.prev_uncommitted_str = ""
         self.committed_str = ""
         sys.stdout.write(self.hide_cursor)
+        self.approved_words = []
 
     def write(self, approved: list[str], assumption: list[str]):
         approved = [token['text'].strip() for token in approved]
         assumption = [token['text'].strip() for token in assumption]
+        self.approved_words.extend(approved)
 
-        new_committed_str = " ".join(approved)
+        new_committed_str = " ".join(self.approved_words)
         new_uncommitted_str = " ".join(assumption)
 
         if self.prev_uncommitted_str:
@@ -257,3 +259,4 @@ class StdoutStream:
             sys.stdout.write("\b" * len(self.prev_uncommitted_str) + self.clear_to_eol)
         sys.stdout.write("\n" + self.show_cursor)
         sys.stdout.flush()
+        self.approved_words = []
