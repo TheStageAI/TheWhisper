@@ -144,10 +144,10 @@ print(result["text"])
 ### Apple Usage with Streaming
 
 ```python
-from thestage_speechkit.apple import WhisperStreamingPipeline
+from thestage_speechkit.apple import StreamingPipeline
 from thestage_speechkit.streaming import MicStream, FileStream, StdoutStream
 
-streaming_pipe = WhisperStreaming(
+streaming_pipe = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
     # Optimized model by ANNA
     model_size='S',
