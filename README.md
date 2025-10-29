@@ -16,6 +16,7 @@ For the first release this repository provides **open-source transcription model
 - High-performance TheStage AI inference engines (NVIDIA GPU)
 - CoreML engines for macOS / Apple Silicon with the lowest in the world power consumption for MacOS
 - Local RestAPI with frontend examples using ReactJS and Electron [see for details](electron_app/README.md)
+- Electron demo app built by TheStage AI (Certified by Apple): [TheNotes for macOS](https://cdn.thestage.ai/production/cms_file_upload/1761693601-8ef0605f-a2e0-4bef-97c1-b61452e4f7dc/The%20Notes%20Package%20Oct%2028%202025.pkg)
 
 It is optimized for **low-latency**, **low power usage**, and **scalable** streaming transcription. Ideal for real-time captioning, live meetings, voice interfaces, and edge deployments.
 
@@ -26,11 +27,9 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - [✨ Features](#-features)
 - [⚡ Quick Start](#-quick-start)
 - [🛠️ Support Matrix](#-support-matrix-and-system-requirements)
-- [💡 Usage](#usage-deployment)
+- [💡 Usage](#-usage-deployment)
 - [🖥️ Build On-Device Desktop Application for Apple](#-build-on-device-desktop-application-for-apple)
 - [📊 Quality Benchmarks](#-quality-benchmarks)
-  - [🍏 Apple Silicon Benchmarks](apple_benchmarks.md)
-  - [⚡ NVIDIA GPU Benchmarks](nvidia_benchmarks.md)
 - [🏢 Enterprise License Summary](#-enterprise-license-summary)
 - [🙌 Acknowledgements](#-acknowledgements)
 
@@ -224,6 +223,8 @@ print(result["text"])
 You can build a macOS desktop app with real-time transcription. Find a simple ReactJS application here: **Link to React Frontend**
 You can also download our app built using this backend here: [TheNotes for macOS](https://cdn.thestage.ai/production/cms_file_upload/1761693601-8ef0605f-a2e0-4bef-97c1-b61452e4f7dc/The%20Notes%20Package%20Oct%2028%202025.pkg)
 
+https://github.com/user-attachments/assets/f4d3fe7b-e2c5-42ff-a5d0-fef6afd11684
+
 -----
 
 ## 📊 Quality Benchmarks
@@ -283,8 +284,17 @@ TheWhisper is a fine-tuned Whisper model that can process audio chunks of any si
 
 ----
 
-## 🙌 Acknowledgements
+## 🏃 Ongoing development
 
+- Ready-to-go containers for inference on Nvidia GPUs with OpenAI compatible API
+- Nvidia Jetson support
+- Time stamps support on Nvidia
+- Streaming containers for Nvidia
+- Speaker diarization, speaker identification
+
+----
+
+## 🙌 Acknowledgements
 
 - **Silero VAD**: Used for voice activity detection in `thestage_speechkit/vad.py`. See https://github.com/snakers4/silero-vad.
 - **OpenAI Whisper**: Original Whisper model and pretrained checkpoints. See https://github.com/openai/whisper.
