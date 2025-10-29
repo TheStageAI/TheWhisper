@@ -73,7 +73,7 @@ pip install .[nvidia]
 
 ### Install for Nvidia with TheStage AI optmized engines
 ```bash
-pip install .[nvidia_thestage] --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
+pip install .[nvidia] --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
 pip install thestage
 # additional dependencies
 pip install flash_attn==2.8.2 --no-build-isolation
@@ -287,6 +287,7 @@ TheWhisper is a fine-tuned Whisper model that can process audio chunks of any si
 ----
 
 ## 🙌 Acknowledgements
+
 
 - **Silero VAD**: Used for voice activity detection in `thestage_speechkit/vad.py`. See https://github.com/snakers4/silero-vad.
 - **OpenAI Whisper**: Original Whisper model and pretrained checkpoints. See https://github.com/openai/whisper.
