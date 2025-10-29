@@ -31,6 +31,7 @@ class StreamingPipeline:
         agreement_majority_threshold: int = 2,
         platform: str = 'apple',
         torch_dtype: torch.dtype = torch.float16,
+        language: str = 'en',
     ):
         """
         """
@@ -50,13 +51,13 @@ class StreamingPipeline:
         )
 
         self.chunk_length_s: float = chunk_length_s
-        self.window_size: float = chunk_length_s - 2
+        self.window_size: float = chunk_length_s - 1
         self.sample_rate: int = 16000
         
-        special_tokens: str = "<|startoftranscript|><|en|><|transcribe|>"
+        special_tokens: str = f"<|startoftranscript|><|{language}|><|transcribe|>"
         self.encoded_special_tokens: torch.Tensor = self.asr_pipeline.tokenizer(
-            special_tokens, return_tensors="pt"
-        ).input_ids[:, 2:-1]
+            special_tokens, return_tensors="pt", add_special_tokens=False
+        ).input_ids
         
         self.use_vad: bool = use_vad
         self.no_speech_streak: int = 0
@@ -134,7 +135,7 @@ class StreamingPipeline:
                 
                 return [], []
 
-        if self.current_audio_buffer is not None and len(self.current_audio_buffer) / self.sample_rate > 1:
+        if self.current_audio_buffer is not None and len(self.current_audio_buffer) / self.sample_rate > 2:
             self.current_audio_buffer = np.concatenate([self.current_audio_buffer, chunk])
             
             if len(self.current_audio_buffer) > self.window_size * self.sample_rate:
@@ -222,8 +223,8 @@ class StreamingPipeline:
         if prefix_text is not None and len(prefix_text) > 0:
             prefix_text_str: str = ''.join([w['text'] for w in prefix_text])
             decoder_input_ids: torch.Tensor = self.asr_pipeline.tokenizer(
-                prefix_text_str, return_tensors="pt"
-            ).input_ids[:, 2:-1]
+                prefix_text_str, return_tensors="pt", add_special_tokens=False
+            ).input_ids
             generate_kwargs['decoder_input_ids'] = torch.cat(
                 [self.encoded_special_tokens, decoder_input_ids], dim=1
             ).to('cpu')
