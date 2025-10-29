@@ -16,7 +16,7 @@ For the first release this repository provides **open-source transcription model
 - High-performance TheStage AI inference engines (NVIDIA GPU), 220 tok/s on L40s for whisper-large-v3 model.
 - CoreML engines for macOS / Apple Silicon with the lowest in the world power consumption for MacOS
 - Local RestAPI with frontend examples using JS and Electron [see for details](electron_app/README.md)
-- Electron demo app built by TheStage AI (Certified by Apple): [TheNotes for macOS](https://cdn.thestage.ai/production/cms_file_upload/1761746543-88b5430a-5897-4348-b031-8a1101352c72/The Notes.pkg)
+- Electron demo app built by TheStage AI (Certified by Apple): [TheNotes for macOS](https://cdn.thestage.ai/production/cms_file_upload/1761746543-88b5430a-5897-4348-b031-8a1101352c72/The%20Notes.pkg)
 
 https://github.com/user-attachments/assets/f4d3fe7b-e2c5-42ff-a5d0-fef6afd11684
 
