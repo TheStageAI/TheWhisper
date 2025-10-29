@@ -10,7 +10,7 @@ generate_kwargs={
     'language': 'en',
 }
 audio, sr = load('example_speech.wav')
-audio = resample(audio, sr, 16000)
+audio = resample(audio, orig_sr=sr, target_sr=16000)
 output = pipe(
     audio,
     chunk_length_s=10, 
