@@ -154,8 +154,9 @@ streaming_pipe = StreamingPipeline(
     # Optimized model by ANNA
     model_size='S',
     # Window length
-    chunk_length_s=10,
-    platform='apple'
+    chunk_length_s=15,
+    platform='apple',
+    language='en'
 )
 
 # set stride in miliseconds
