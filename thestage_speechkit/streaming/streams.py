@@ -1,9 +1,9 @@
+import numpy as np
 import sys
 import time
-import math
 import threading
-import queue
 from typing import Optional
+from sounddevice import InputStream
 from librosa import load, resample
 
 import numpy as np
@@ -58,7 +58,6 @@ class FileStream:
             else:
                 if elapsed > self.step_size_s:
                     chunk_size = int((elapsed + self.step_size_s) * self.sample_rate)
-                    # print(f"Chunk size: {chunk_size}", "elapsed: ", elapsed)
                 else:
                     time.sleep(self.step_size_s - elapsed)
                     chunk_size = int(self.step_size_s * self.sample_rate)
@@ -86,13 +85,6 @@ class FileStream:
 class MicStream:
     """
     Real-time microphone stream.
-
-    Always real-time (no real_time=False mode). Returns np.float32 mono chunks
-    in [-1, 1] at the given `sample_rate`.
-
-    The same pacing logic is applied:
-      - If elapsed < step -> wait remaining time then return ~step seconds.
-      - If elapsed >= step -> return chunk sized (elapsed + step) seconds.
     """
     def __init__(
         self,
@@ -101,113 +93,46 @@ class MicStream:
         device: Optional[int] = None,
         channels: int = 1,
     ):
-        try:
-            import sounddevice as sd
-        except ImportError as e:
-            raise ImportError(
-                "MicStream requires the 'sounddevice' package. Install with 'pip install sounddevice'."
-            ) from e
+        self.step_size_s = step_size_s
+        self.sample_rate = sample_rate
+        self.device = device
+        self.channels = channels
 
-        self.sample_rate = int(sample_rate)
-        self.step_size_s = float(step_size_s)
-        self.channels = int(channels)
-        if self.channels != 1:
-            # We'll capture multi-channel but downmix to mono
-            pass
-
-        self._q = queue.Queue(maxsize=64)
-        self._buf = np.zeros(0, dtype=np.float32)
-        self._last_call_t: Optional[float] = None
-        self._closed = False
-
-        def callback(indata, frames, time_info, status):
-            if status:
-                # You could log warnings here if desired
-                pass
-            # indata is float32, shape (frames, channels)
-            block = indata.astype(np.float32, copy=False)
-            if self.channels > 1:
-                block = block.mean(axis=1)
-            else:
-                block = block.reshape(-1)
-            try:
-                self._q.put_nowait(block.copy())
-            except queue.Full:
-                # Drop if overwhelmed
-                pass
-
-        self._sd = sd
-        self._stream = sd.InputStream(
-            samplerate=self.sample_rate,
+        self.stream = InputStream(
+            samplerate=sample_rate,
+            blocksize=int(step_size_s * sample_rate / 2),
             device=device,
-            channels=self.channels,
-            dtype="float32",
-            blocksize=int(self.step_size_s * self.sample_rate / 2),
-            callback=callback,
+            channels=channels,
         )
-        self._stream.start()
+        self.read_thread = threading.Thread(target=self.read_stream)
+        self.queue = []
+        self.last_chunk_time = None
 
-    def _desired_samples(self, elapsed: Optional[float]) -> int:
-        # Always real-time
-        if elapsed is None:
-            duration = self.step_size_s
-        elif elapsed < self.step_size_s:
-            time.sleep(self.step_size_s - elapsed)
-            duration = self.step_size_s
-        else:
-            duration = elapsed + self.step_size_s
-        return int(round(duration * self.sample_rate))
+    def read_stream(self):
+        self.stream.start()
+        while True:
+            chunk, _ = self.stream.read(int(self.step_size_s * self.sample_rate))
+            self.queue.append(chunk.squeeze())
+    
+    def next_chunk(self) -> Optional[np.ndarray]:
+        if not self.read_thread.is_alive():
+            self.read_thread.start()
+        
+        while not self.queue:
+            time.sleep(0.01)
+        chunk = np.concatenate(self.queue, axis=0)
+        self.queue = []
 
-    def next_chunk(self) -> np.ndarray:
-        if self._closed:
-            return np.zeros(0, dtype=np.float32)
-
-        now = time.monotonic()
-        elapsed = None if self._last_call_t is None else (now - self._last_call_t)
-
-        need = self._desired_samples(elapsed)
-
-        # Fill internal buffer from queue until enough samples
-        while self._buf.size < need and not self._closed:
-            try:
-                block = self._q.get(timeout=0.1)
-                self._buf = np.concatenate([self._buf, block]) if self._buf.size else block
-            except queue.Empty:
-                # Keep waiting until we can satisfy `need` or until closed
-                continue
-
-        if self._buf.size == 0:
-            # Nothing captured (e.g., muted device). Return silence of the desired size.
-            self._last_call_t = time.monotonic()
-            return np.zeros(need, dtype=np.float32)
-
-        if self._buf.size <= need:
-            out = self._buf
-            # If still short, pad with zeros to meet `need`
-            if out.size < need:
-                pad = np.zeros(need - out.size, dtype=np.float32)
-                out = np.concatenate([out, pad]) if out.size else pad
-            self._buf = np.zeros(0, dtype=np.float32)
-            self._last_call_t = time.monotonic()
-            return out.astype(np.float32, copy=False)
-
-        out = self._buf[:need]
-        self._buf = self._buf[need:]
-        self._last_call_t = time.monotonic()
-        return out.astype(np.float32, copy=False)
+        return chunk
 
     def close(self):
-        if self._closed:
-            return
-        self._closed = True
-        try:
-            self._stream.stop()
-            self._stream.close()
-        except Exception:
-            pass
-        # Drain the queue
-        with self._q.mutex:
-            self._q.queue.clear()
+        self.stream.stop()
+        self.stream.close()
+        if self.read_thread.is_alive():
+            self.read_thread.join(timeout=1.0)
+
+    def __del__(self):
+        self.close()
 
 
 class StdoutStream:
