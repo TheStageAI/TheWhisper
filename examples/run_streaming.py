@@ -1,4 +1,6 @@
-from thestage_speechkit.streaming import StreamingPipeline, MicStream, FileStream, StdoutStream
+from thestage_speechkit.streaming import (
+    StreamingPipeline, MicStream, FileStream, StdoutStream
+)
 from transformers.utils import logging as hf_logging
 import logging, warnings
 
@@ -18,17 +20,16 @@ warnings.filterwarnings("ignore", message=r"Whisper did not predict an ending ti
 streaming_model = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
     chunk_length_s=10,
-    platform='apple'
+    platform='apple',
 )
 
 if args.use_mic:
-    audio_stream = MicStream(step_size_s=0.5, sample_rate=16000)
+    audio_stream = MicStream()
 else:
-    audio_stream = FileStream(
-        'example_speech.wav', step_size_s=0.5, sample_rate=16000
-    )
+    audio_stream = FileStream('example_speech.wav')
 
 output_stream = StdoutStream()
+
 while True:
     chunk = audio_stream.next_chunk()
     if chunk is not None:
