@@ -21,6 +21,7 @@ streaming_model = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
     chunk_length_s=15,
     platform='apple',
+    language='en',
 )
 
 if args.use_mic:
