@@ -51,7 +51,7 @@ class StreamingPipeline:
         )
 
         self.chunk_length_s: float = chunk_length_s
-        self.window_size: float = chunk_length_s - 1
+        self.window_size: float = 10
         self.sample_rate: int = 16000
         
         special_tokens: str = f"<|startoftranscript|><|{language}|><|transcribe|>"
@@ -59,7 +59,6 @@ class StreamingPipeline:
             special_tokens, return_tensors="pt", add_special_tokens=False
         ).input_ids
         
-        self.use_vad: bool = use_vad
         self.no_speech_streak: int = 0
         self.speech_threshold: float = 0.5
 
@@ -135,7 +134,7 @@ class StreamingPipeline:
                 
                 return [], []
 
-        if self.current_audio_buffer is not None and len(self.current_audio_buffer) / self.sample_rate > 2:
+        if self.current_audio_buffer is not None and len(self.current_audio_buffer) / self.sample_rate > 1:
             self.current_audio_buffer = np.concatenate([self.current_audio_buffer, chunk])
             
             if len(self.current_audio_buffer) > self.window_size * self.sample_rate:
