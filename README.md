@@ -129,14 +129,13 @@ from thestage_speechkit.apple import ASRPipeline
 model = ASRPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
     # optimized model with ANNA
-    model_size='S'
+    model_size='S',
     chunk_length_s=10
 )
 
 # inference
 result = model(
     "path_to_your_audio.wav", 
-    max_batch_size=32,
     return_timestamps="word"
 )
 
