@@ -182,13 +182,15 @@ model = ASRPipeline(
     # allowed: 10s, 15s, 20s, 30s
     chunk_length_s=10,
     # optimized TheStage AI engines
+    batch_size=32,
     device='cuda'
 )
 
 # inference
 result = model(
     audio="path_to_your_audio.wav", 
-    max_batch_size=32
+    chunk_length_s=10,
+    generate_kwargs={'do_sample': False, 'use_cache': True}
 )
 
 print(result["text"])
@@ -206,13 +208,15 @@ model = ASRPipeline(
     chunk_length_s=10,
     # optimized TheStage AI engines
     mode='S',
+    batch_size=32,
     device='cuda'
 )
 
 # inference
 result = model(
     "path_to_your_audio.wav", 
-    max_batch_size=32
+    chunk_length_s=10,
+    generate_kwargs={'do_sample': False, 'use_cache': True}
 )
 
 print(result["text"])

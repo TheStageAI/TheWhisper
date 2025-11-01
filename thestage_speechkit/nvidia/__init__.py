@@ -1,4 +1,3 @@
-from .asr_pipeline import BatchedASRPipeline
-from .hf_pipeline import ASRPipeline
+from .asr_pipeline import ASRPipeline
 
-__all__ = ["ASRPipeline", "BatchedASRPipeline"]
+__all__ = ["ASRPipeline"]
