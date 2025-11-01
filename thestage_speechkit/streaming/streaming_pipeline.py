@@ -4,6 +4,7 @@ import numpy as np
 from time import time
 from typing import List, Dict, Optional, Union, Any
 from transformers.utils import logging as hf_logging
+import zlib
 
 from .local_agreement import LocalAgreement
 from ..vad import batched_vad
@@ -15,6 +16,11 @@ hf_logging.set_verbosity_error()
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'info')
 
 torch.set_grad_enabled(False)
+
+
+def _compression_ratio(text) -> float:
+    text_bytes = text.encode("utf-8")
+    return len(text_bytes) / len(zlib.compress(text_bytes))
 
 
 class StreamingPipeline:
@@ -234,6 +240,10 @@ class StreamingPipeline:
             generate_kwargs=generate_kwargs,
             chunk_length_s=self.chunk_length_s,
         )
+        
+        if _compression_ratio(result['text']) > 2.2:
+            return []
+        
         generated_tokens: List[Dict[str, Any]] = []
         max_word_duration: float = 1.0
 
