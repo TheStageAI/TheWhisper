@@ -11,7 +11,9 @@ chunk_length_s = 10
 pipe = ASRPipeline(
     'TheStageAI/thewhisper-large-v3-turbo', 
     chunk_length_s=chunk_length_s, 
-    model_size='S', device='cuda'
+    model_size='S', 
+    batch_size=32,
+    device='cuda'
 )
 audio, sr = load('example_speech.wav')
 audio = resample(audio, orig_sr=sr, target_sr=16000)
