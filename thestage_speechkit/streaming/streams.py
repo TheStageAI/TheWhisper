@@ -12,9 +12,9 @@ import numpy as np
 # FileStream
 # ------------------------------
 
-class FileStream:
+class ArrayStream:
     """
-    Stream audio chunks from a WAV file with optional real-time pacing.
+    Stream audio chunks from a numpy array with optional real-time pacing.
 
     Returns np.float32 mono chunks in [-1, 1], sampled at `sample_rate`.
     - If `real_time=False`: each next_chunk() returns exactly step_size_s seconds.
@@ -24,20 +24,15 @@ class FileStream:
     """
     def __init__(
         self,
-        path: str,
+        audio_data: np.ndarray,
         step_size_s: float = 0.5,
         sample_rate: int = 16000,
         real_time: bool = True,
     ):
-        self.path = path
+        self.audio_data = audio_data.flatten()
         self.sample_rate = sample_rate
         self.step_size_s = step_size_s
         self.real_time = real_time
-        
-        self.audio_data, sr = load(path, sr=sample_rate)
-        if sr != sample_rate:
-            self.audio_data = resample(self.audio_data, orgi_sr=sr, target_sr=sample_rate)
-        self.audio_data = self.audio_data.flatten()
         self._current_position = 0
         self._last_call_t = None
         self._eof = False
@@ -77,6 +72,29 @@ class FileStream:
         self._eof = False
         self.audio_data = None
 
+
+class FileStream(ArrayStream):
+    """
+    Stream audio chunks from a WAV file with optional real-time pacing.
+
+    Returns np.float32 mono chunks in [-1, 1], sampled at `sample_rate`.
+    - If `real_time=False`: each next_chunk() returns exactly step_size_s seconds.
+    - If `real_time=True`:
+        * If elapsed < step -> wait remaining time and return step-size chunk.
+        * If elapsed >= step -> return chunk sized (elapsed + step) seconds.
+    """
+    def __init__(
+        self,
+        path: str,
+        step_size_s: float = 0.5,
+        sample_rate: int = 16000,
+        real_time: bool = True,
+    ):
+        self.path = path
+        audio_data, sr = load(path, sr=sample_rate)
+        if sr != sample_rate:
+            audio_data = resample(audio_data, orgi_sr=sr, target_sr=sample_rate)
+        super().__init__(audio_data, step_size_s, sample_rate, real_time)
 
 # ------------------------------
 # MicStream
@@ -135,7 +153,14 @@ class MicStream:
         self.close()
 
 
+# ------------------------------
+# StdoutStream
+# ------------------------------
+
 class StdoutStream:
+    """
+    Stream approved and assumption words to stdout.
+    """
     def __init__(self):
         self.hide_cursor = "\x1b[?25l"
         self.show_cursor = "\x1b[?25h"
