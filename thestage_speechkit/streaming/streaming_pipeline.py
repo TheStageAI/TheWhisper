@@ -44,8 +44,10 @@ class StreamingPipeline:
 
         if platform == 'apple':
             from ..apple import ASRPipeline
+            device = 'cpu'
         elif platform == 'nvidia':
             from ..nvidia import ASRPipeline
+            device = 'cuda'
         else:
             raise ValueError(f"Invalid platform: {platform}")
         
@@ -53,8 +55,10 @@ class StreamingPipeline:
             model, 
             model_size=model_size, 
             chunk_length_s=chunk_length_s, 
-            torch_dtype=torch_dtype
+            torch_dtype=torch_dtype,
+            device=device
         )
+        self.device = device
 
         self.chunk_length_s: float = chunk_length_s
         self.window_size: float = 10
@@ -232,7 +236,7 @@ class StreamingPipeline:
             ).input_ids
             generate_kwargs['decoder_input_ids'] = torch.cat(
                 [self.encoded_special_tokens, decoder_input_ids], dim=1
-            ).to('cpu')
+            ).to(self.device)
 
         result: Dict[str, Any] = self.asr_pipeline(
             audio,
