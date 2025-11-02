@@ -273,3 +273,16 @@ class StreamingPipeline:
                 'end': token['timestamp'][1] + self.current_time - len(self.current_audio_buffer) / self.sample_rate
             })
         return self._prefix_tokens + generated_tokens
+
+    def clear(self) -> None:
+        """
+        Reset the pipeline to its initial state.
+        """
+        self.current_audio_buffer = None
+        self.buffer_start_time = 0.0
+        self._prefix_tokens = []
+        self.current_time = 0.0
+        self.audio_queue = []
+        self.no_speech_streak = 0
+        self.speech_threshold = 0.5
+        self.local_agreement.clear()
