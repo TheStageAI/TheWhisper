@@ -25,7 +25,6 @@ dependencies = [
   "uvicorn",
   "python-multipart",
   "sounddevice",
-  "zlib"
 ]
 
 [project.optional-dependencies]
