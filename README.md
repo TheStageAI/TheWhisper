@@ -188,7 +188,7 @@ model = ASRPipeline(
 
 # inference
 result = model(
-    audio="path_to_your_audio.wav", 
+    "path_to_your_audio.wav", 
     chunk_length_s=10,
     generate_kwargs={'do_sample': False, 'use_cache': True}
 )
