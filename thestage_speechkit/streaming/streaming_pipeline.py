@@ -3,6 +3,7 @@ import os
 import numpy as np
 from time import time
 from typing import List, Dict, Optional, Union, Any
+from transformers import SequenceFeatureExtractor, PreTrainedTokenizer
 from transformers.utils import logging as hf_logging
 import zlib
 
@@ -38,6 +39,8 @@ class StreamingPipeline:
         platform: str = 'apple',
         torch_dtype: torch.dtype = torch.float16,
         language: str = 'en',
+        feature_extractor: Optional[SequenceFeatureExtractor] = None,
+        tokenizer: Optional[PreTrainedTokenizer] = None,
     ):
         """
         """
@@ -56,7 +59,9 @@ class StreamingPipeline:
             model_size=model_size, 
             chunk_length_s=chunk_length_s, 
             torch_dtype=torch_dtype,
-            device=device
+            device=device,
+            feature_extractor=feature_extractor,
+            tokenizer=tokenizer
         )
         self.device = device
 
