@@ -20,6 +20,6 @@ audio = resample(audio, orig_sr=sr, target_sr=16000)
 output = pipe(
     audio,
     generate_kwargs=generate_kwargs,
-    chunk_length_s=chunk_length_s,
+    chunk_length_s=chunk_length_s-1,
 )
 print(output)
