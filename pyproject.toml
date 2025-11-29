@@ -29,13 +29,13 @@ dependencies = [
 
 [project.optional-dependencies]
 nvidia = [
-  "torch==2.6.0",
+  "torch==2.9.0",
   "transformers==4.52.3",
-  "torchaudio==2.6.0",
-  "tensorrt==10.6.0.post2",
-  "tensorrt-cu12==10.6.0.post2",
-  "tensorrt-cu12-bindings==10.6.0.post2",
-  "tensorrt-cu12-libs==10.6.0.post2",
+  "torchaudio==2.9.0",
+  "tensorrt==10.13.0.35",
+  "tensorrt-cu12==10.13.0.35",
+  "tensorrt-cu12-bindings==10.13.0.35",
+  "tensorrt-cu12-libs==10.13.0.35",
 ]
 apple = [
   "torch==2.6.0",
