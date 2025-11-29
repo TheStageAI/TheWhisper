@@ -41,7 +41,10 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
             if model_size is not None:
                 from elastic_models.transformers import WhisperForConditionalGeneration
                 model = WhisperForConditionalGeneration.from_pretrained(
-                    model_name, mode=model_size, torch_dtype=torch_dtype
+                    model_name, 
+                    mode=model_size, 
+                    chunk_length=chunk_length_s, 
+                    torch_dtype=torch_dtype
                 )
             else:
                 model = HFWhisperForConditionalGeneration.from_pretrained(
