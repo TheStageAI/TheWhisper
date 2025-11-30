@@ -246,8 +246,8 @@ For comprehensive quality and performance benchmarks, including comparisons with
 |-------|-----------------|
 | openai/whisper-large-v3-turbo | 7.81 |
 | openai/whisper-large-v3 | 7.45 |
-| thewhisper-large-v3-turbo | 7.88 |
-| thewhisper-large-v3 | 7.8 |
+| thewhisper-large-v3-turbo | 7.94 |
+| thewhisper-large-v3 | 7.87 |
 
 
 ### 15s chunks
@@ -256,7 +256,7 @@ For comprehensive quality and performance benchmarks, including comparisons with
 |-------|-----------------|
 | openai/whisper-large-v3-turbo | 7.61 |
 | openai/whisper-large-v3 | 7.22 |
-| thewhisper-large-v3-turbo | 7.45 |
+| thewhisper-large-v3-turbo | 7.62 |
 | thewhisper-large-v3 | 7.34 |
 
 ### 20s chunks
@@ -274,7 +274,7 @@ For comprehensive quality and performance benchmarks, including comparisons with
 |-------|-----------------|
 | openai/whisper-large-v3-turbo | 7.61 |
 | openai/whisper-large-v3 | 7.32 |
-| thewhisper-large-v3-turbo | 7.45 |
+| thewhisper-large-v3-turbo | 7.67 |
 | thewhisper-large-v3 | 7.28 |
 
 ---
