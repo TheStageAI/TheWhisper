@@ -30,7 +30,7 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - [🛠️ Support Matrix](#%EF%B8%8F-support-matrix-and-system-requirements)
 - [💡 Usage](#%EF%B8%8F-usage-and-deployment)
 - [🖥️ Build On-Device Desktop Application for Apple](#-build-on-device-desktop-application-for-apple)
-- [📊 Quality Benchmarks](#-quality-benchmarks)
+- [📊 Benchmarks](#-benchmarks)
 - [🏢 Enterprise License Summary](#-enterprise-license-summary)
 - [🏃 Ongoing Development](#-ongoing-development)
 - [🙌 Acknowledgements](#-acknowledgements)
@@ -93,7 +93,7 @@ thestage config set --api-token <YOUR_API_TOKEN>
 | --- | --- | --- | --- | --- |
 | Streaming | ❌ | ✅ | ❌ | ✅ |
 | Accelerated | ✅ | ✅ | ✅ | ✅ |
-| Word Timestamps | ❌ | ✅ | ❌ | ✅ |
+| Word Timestamps | ✅ | ✅ | ✅ | ✅ |
 | Multilingual | ✅ | ✅ | ✅ | ✅ |
 | 10s Chunk Mode | ✅ | ✅ | ✅ | ✅ |
 | 15s Chunk Mode | ✅ | ✅ | ✅ | ✅ |
@@ -102,7 +102,7 @@ thestage config set --api-token <YOUR_API_TOKEN>
 
 ### Nvidia GPU Requirements
 
-- **Supported GPUs:** RTX 4090, L40s
+- **Supported GPUs:** RTX 4090, RTX 5090, L40s, H100
 - **Operating System:** Ubuntu 20.04+
 - **Minimum RAM:** 2.5 GB (5 GB recommended for large-v3 model)
 - **CUDA Version:** 11.8 or higher
@@ -230,9 +230,11 @@ You can also download our app built using this backend here: [TheNotes for macOS
 
 -----
 
-## 📊 Quality Benchmarks
+## 📊 Benchmarks
 
 TheWhisper is a fine-tuned Whisper model that can process audio chunks of any size up to 30 seconds. Unlike the original Whisper models, it doesn't require padding audio with silence to reach 30 seconds. We conducted quality benchmarking across different chunk sizes: 10, 15, 20, and 30 seconds. For quality benchmarks, we used the multilingual benchmarks [Open ASR Leaderboard](https://github.com/huggingface/open_asr_leaderboard#evaluate-a-model).
+
+For comprehensive quality and performance benchmarks, including comparisons with other Whisper inference solutions, please refer to the [benchmark/](benchmark/README.md) directory.
 
 <img width="1547" height="531" alt="vanilla whisper (1)" src="https://github.com/user-attachments/assets/f0c86e58-d834-4ac7-a06b-df3a7ae3e9e9" />
 <img width="1547" height="458" alt="TheStage AI Whisper (1)" src="https://github.com/user-attachments/assets/17fb45a3-b33d-4c83-b843-69b0f0aa3f65" />
