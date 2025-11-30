@@ -32,7 +32,8 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - [🖥️ Build On-Device Desktop Application for Apple](#-build-on-device-desktop-application-for-apple)
 - [📊 Benchmarks](#-benchmarks)
 - [🏢 Enterprise License Summary](#-enterprise-license-summary)
-- [🏃 Ongoing Development](#-ongoing-development)
+- [🧭 Development Status](#-development-status)
+- [📝 Changelog](#-changelog-high-level)
 - [🙌 Acknowledgements](#-acknowledgements)
 
 <!-- </details> -->
@@ -291,13 +292,23 @@ To get commercial license for bigger number of GPUs to use TheStage AI optimized
 
 ----
 
-## 🏃 Ongoing development
+## 🧭 Development Status
 
-- Ready-to-go containers for inference on Nvidia GPUs with OpenAI compatible API
-- Nvidia Jetson support
-- Time stamps support on Nvidia
-- Streaming containers for Nvidia
-- Speaker diarization, speaker identification
+✅ OpenASR WER benchmarks for multiple chunk sizes
+
+✅ Latency, memory, power benchmarks for Apple + NVIDIA (see `benchmark/README.md`)
+
+✅ Support for L40S, H100, RTX 4090, RTX 5090
+
+✅ Time-stamp support on Nvidia
+
+☐ Nvidia Jetson support
+
+☐ Ready-to-go containers for inference on Nvidia GPUs with OpenAI compatible API
+
+☐ Streaming containers for Nvidia
+
+☐ Speaker diarization and speaker identification
 
 ----
 
