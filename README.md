@@ -13,10 +13,11 @@ This repository aims to share and develop the most efficient speech-to-text and 
 
 For the first release this repository provides **open-source transcription models** with **streaming inference support** and:
 - Hugging Face open weights for whisper models with a flexible chunk size (original models have 30s)
-- High-performance TheStage AI inference engines (NVIDIA GPU), 220 tok/s on L40s for whisper-large-v3 model.
+- High-performance TheStage AI inference engines (NVIDIA GPU), 220 tok/s on L40s for whisper-large-v3 model
 - CoreML engines for macOS / Apple Silicon with the lowest in the world power consumption for MacOS
 - Local RestAPI with frontend examples using JS and Electron [see for details](electron_app/README.md)
 - Electron demo app built by TheStage AI (Certified by Apple): [TheNotes for macOS](https://cdn.thestage.ai/production/cms_file_upload/1761746543-88b5430a-5897-4348-b031-8a1101352c72/The%20Notes.pkg)
+- [Tutorial](https://app.thestage.ai/blog/Building-a-macOS-Note-Taker-app-on-Electron-with-TheWhisper?id=6) on building local note-taking app for macOS using  Electron and TheWhisper
 
 https://github.com/user-attachments/assets/f4d3fe7b-e2c5-42ff-a5d0-fef6afd11684
 
@@ -48,11 +49,13 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - Optimized engines for NVIDIA GPUs through TheStage AI [ElasticModels](https://docs.thestage.ai/elastic_models/docs/source/index.html) (free for small orgs)
 - Streaming implementation (NVIDIA + macOS)
 - Benchmarks: latency, memory, power, and ASR accuracy (OpenASR)
-- Simple Python API, Examples of deployment for MacOS desktop app with Electron and ReactJS
+- Simple Python API, examples and [tutorial](https://app.thestage.ai/blog/Building-a-macOS-Note-Taker-app-on-Electron-with-TheWhisper?id=6) of deployment for MacOS desktop app with Electron and ReactJS
 
 <img width="1547" height="877" alt="apple m2 whisper (4)" src="https://github.com/user-attachments/assets/9404cdc0-b120-4ba1-9c65-4d42089ba623" />
 <img width="1547" height="877" alt="nvidia l40s (2)" src="https://cdn.thestage.ai/production/cms_file_upload/1764602147-b10162ae-e6f7-4307-bcb0-54b94528221c/NVIDIA, RTX-5090 (1).png" />
 <!-- <img width="1547" height="877" alt="nvidia l40s (2)" src="https://github.com/user-attachments/assets/7c318bb6-cbd6-42ce-b42f-096cd7a1070c" /> -->
+
+For comprehensive performance and quality benchmarks see [benchmark/](benchmark/README.md).
 
 ---
 
@@ -293,9 +296,9 @@ To get commercial license for bigger number of GPUs to use TheStage AI optimized
 
 ## 🧭 Development Status
 
-✅ OpenASR WER benchmarks for multiple chunk sizes
+✅ OpenASR WER [benchmark](benchmark/README.md) for multiple chunk sizes
 
-✅ Performance benchmarks for NVIDIA (see `benchmark/README.md`)
+✅ Performance [benchmark](benchmark/README.md) for NVIDIA
 
 ✅ Support for L40S, H100, RTX 4090, RTX 5090
 
