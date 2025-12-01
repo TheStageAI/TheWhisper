@@ -51,7 +51,8 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - Simple Python API, Examples of deployment for MacOS desktop app with Electron and ReactJS
 
 <img width="1547" height="877" alt="apple m2 whisper (4)" src="https://github.com/user-attachments/assets/9404cdc0-b120-4ba1-9c65-4d42089ba623" />
-<img width="1547" height="877" alt="nvidia l40s (2)" src="https://github.com/user-attachments/assets/7c318bb6-cbd6-42ce-b42f-096cd7a1070c" />
+<img width="1547" height="877" alt="nvidia l40s (2)" src="https://cdn.thestage.ai/production/cms_file_upload/1764602147-b10162ae-e6f7-4307-bcb0-54b94528221c/NVIDIA, RTX-5090 (1).png" />
+<!-- <img width="1547" height="877" alt="nvidia l40s (2)" src="https://github.com/user-attachments/assets/7c318bb6-cbd6-42ce-b42f-096cd7a1070c" /> -->
 
 ---
 
