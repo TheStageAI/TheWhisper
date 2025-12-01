@@ -440,6 +440,7 @@ For evaluation, we used datasets from [Open ASR Leaderboard](https://github.com/
 |-----------------------------------------|------|------|------|------|
 | **TheStageAI/thewhisper-large-v3-turbo S**  | 7.94 | 7.62 | 7.50 | 7.87 |
 | **TheStageAI/thewhisper-large-v3-turbo XL** | 7.88 | 7.54 | 7.40 | 7.67 |
+| openai/whisper-large-v3-turbo               |  -   |  -   |  -   | 7.81 |
 
 ---
 
@@ -482,7 +483,7 @@ For evaluation, we used datasets from [Open ASR Leaderboard](https://github.com/
 |-----------------------------------------|-----------------------|------------------------|-----------------|--------------|----------------|-----------------|-----------------|----------|----------|
 | **TheStageAI/thewhisper-large-v3-turbo S**  | 2.17                  | 4.82                   | 2.89            | 4.01         | 9.15           | 10.34           | 11.81           | 17.77    | **7.87** |
 | **TheStageAI/thewhisper-large-v3-turbo XL** | 2.07                  | 4.54                   | 2.81            | 3.81         | 8.79           | 10.14           | 11.71           | 17.51    | **7.67** |
-| openai/whisper-large-v3-turbo (original)           | 1.97                  | 3.94                   | 2.96            | 3.46         | 11.49          | 10.13           | 11.69           | 16.12    | 7.72     |
+| openai/whisper-large-v3-turbo           | 1.97                  | 3.94                   | 2.96            | 3.46         | 11.49          | 10.13           | 11.69           | 16.12    | 7.72     |
 
 ---
 
@@ -495,6 +496,7 @@ For evaluation, we used datasets from [Open ASR Leaderboard](https://github.com/
 |-----------------------------------------|------------|------------|------------|------------|
 | **TheStageAI/thewhisper-large-v3 S**    | 7.87       | 7.60       | 7.82       | 8.09       |
 | **TheStageAI/thewhisper-large-v3 XL**   | 7.90       | 7.64       | 7.82       | 8.05       |
+| openai/whisper-large-v3                 |  -   |  -   |  -   | 8.0  |
 
 ---
 
@@ -531,5 +533,6 @@ For evaluation, we used datasets from [Open ASR Leaderboard](https://github.com/
 |-----------------------------------------|-----------------------|------------------------|-----------------|--------------|----------------|-----------------|-----------------|----------|----------|
 | **TheStageAI/thewhisper-large-v3 S**    | 2.04                  | 4.15                   | 3.09            | 3.98         | 9.51           | 10.77           | 11.65           | 19.50    | **8.09** |
 | **TheStageAI/thewhisper-large-v3 XL**   | 2.02                  | 4.04                   | 3.13            | 3.99         | 9.72           | 10.69           | 11.72           | 19.10    | **8.05** |
+| openai/whisper-large-v3                 | 1.86                  | 3.64                   | 3.38            | 3.85         | 10.59          | 10.86           | 11.43           | 20.36    | **8.00** |
 
 ---
