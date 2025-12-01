@@ -30,9 +30,10 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - [🛠️ Support Matrix](#%EF%B8%8F-support-matrix-and-system-requirements)
 - [💡 Usage](#%EF%B8%8F-usage-and-deployment)
 - [🖥️ Build On-Device Desktop Application for Apple](#-build-on-device-desktop-application-for-apple)
-- [📊 Quality Benchmarks](#-quality-benchmarks)
+- [📊 Benchmarks](#-benchmarks)
 - [🏢 Enterprise License Summary](#-enterprise-license-summary)
-- [🏃 Ongoing Development](#-ongoing-development)
+- [🧭 Development Status](#-development-status)
+- [📝 Changelog](#-changelog-high-level)
 - [🙌 Acknowledgements](#-acknowledgements)
 
 <!-- </details> -->
@@ -50,7 +51,8 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - Simple Python API, Examples of deployment for MacOS desktop app with Electron and ReactJS
 
 <img width="1547" height="877" alt="apple m2 whisper (4)" src="https://github.com/user-attachments/assets/9404cdc0-b120-4ba1-9c65-4d42089ba623" />
-<img width="1547" height="877" alt="nvidia l40s (2)" src="https://github.com/user-attachments/assets/7c318bb6-cbd6-42ce-b42f-096cd7a1070c" />
+<img width="1547" height="877" alt="nvidia l40s (2)" src="https://cdn.thestage.ai/production/cms_file_upload/1764602147-b10162ae-e6f7-4307-bcb0-54b94528221c/NVIDIA, RTX-5090 (1).png" />
+<!-- <img width="1547" height="877" alt="nvidia l40s (2)" src="https://github.com/user-attachments/assets/7c318bb6-cbd6-42ce-b42f-096cd7a1070c" /> -->
 
 ---
 
@@ -75,10 +77,8 @@ pip install .[nvidia]
 ### Install for Nvidia with TheStage AI optmized engines
 ```bash
 pip install .[nvidia]
-pip install thestage-elastic-models[nvidia] --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
+pip install thestage-elastic-models==0.1.4 --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
 pip install thestage
-# additional dependencies
-pip install flash_attn==2.8.2 --no-build-isolation
 ```
 
 Then generate access token on [TheStage AI Platform](https://app.thestage.ai) in your profile and execute the following command:
@@ -93,7 +93,7 @@ thestage config set --api-token <YOUR_API_TOKEN>
 | --- | --- | --- | --- | --- |
 | Streaming | ❌ | ✅ | ❌ | ✅ |
 | Accelerated | ✅ | ✅ | ✅ | ✅ |
-| Word Timestamps | ❌ | ✅ | ❌ | ✅ |
+| Word Timestamps | ✅ | ✅ | ✅ | ✅ |
 | Multilingual | ✅ | ✅ | ✅ | ✅ |
 | 10s Chunk Mode | ✅ | ✅ | ✅ | ✅ |
 | 15s Chunk Mode | ✅ | ✅ | ✅ | ✅ |
@@ -102,7 +102,7 @@ thestage config set --api-token <YOUR_API_TOKEN>
 
 ### Nvidia GPU Requirements
 
-- **Supported GPUs:** RTX 4090, L40s
+- **Supported GPUs:** RTX 4090, RTX 5090, L40s, H100
 - **Operating System:** Ubuntu 20.04+
 - **Minimum RAM:** 2.5 GB (5 GB recommended for large-v3 model)
 - **CUDA Version:** 11.8 or higher
@@ -230,9 +230,11 @@ You can also download our app built using this backend here: [TheNotes for macOS
 
 -----
 
-## 📊 Quality Benchmarks
+## 📊 Benchmarks
 
 TheWhisper is a fine-tuned Whisper model that can process audio chunks of any size up to 30 seconds. Unlike the original Whisper models, it doesn't require padding audio with silence to reach 30 seconds. We conducted quality benchmarking across different chunk sizes: 10, 15, 20, and 30 seconds. For quality benchmarks, we used the multilingual benchmarks [Open ASR Leaderboard](https://github.com/huggingface/open_asr_leaderboard#evaluate-a-model).
+
+For comprehensive quality and performance benchmarks, including comparisons with other Whisper inference solutions, please refer to the [benchmark/](benchmark/README.md) directory.
 
 <img width="1547" height="531" alt="vanilla whisper (1)" src="https://github.com/user-attachments/assets/f0c86e58-d834-4ac7-a06b-df3a7ae3e9e9" />
 <img width="1547" height="458" alt="TheStage AI Whisper (1)" src="https://github.com/user-attachments/assets/17fb45a3-b33d-4c83-b843-69b0f0aa3f65" />
@@ -244,8 +246,8 @@ TheWhisper is a fine-tuned Whisper model that can process audio chunks of any si
 |-------|-----------------|
 | openai/whisper-large-v3-turbo | 7.81 |
 | openai/whisper-large-v3 | 7.45 |
-| thewhisper-large-v3-turbo | 7.88 |
-| thewhisper-large-v3 | 7.8 |
+| thewhisper-large-v3-turbo | 7.94 |
+| thewhisper-large-v3 | 7.87 |
 
 
 ### 15s chunks
@@ -254,7 +256,7 @@ TheWhisper is a fine-tuned Whisper model that can process audio chunks of any si
 |-------|-----------------|
 | openai/whisper-large-v3-turbo | 7.61 |
 | openai/whisper-large-v3 | 7.22 |
-| thewhisper-large-v3-turbo | 7.45 |
+| thewhisper-large-v3-turbo | 7.62 |
 | thewhisper-large-v3 | 7.34 |
 
 ### 20s chunks
@@ -272,7 +274,7 @@ TheWhisper is a fine-tuned Whisper model that can process audio chunks of any si
 |-------|-----------------|
 | openai/whisper-large-v3-turbo | 7.61 |
 | openai/whisper-large-v3 | 7.32 |
-| thewhisper-large-v3-turbo | 7.45 |
+| thewhisper-large-v3-turbo | 7.67 |
 | thewhisper-large-v3 | 7.28 |
 
 ---
@@ -289,13 +291,23 @@ To get commercial license for bigger number of GPUs to use TheStage AI optimized
 
 ----
 
-## 🏃 Ongoing development
+## 🧭 Development Status
 
-- Ready-to-go containers for inference on Nvidia GPUs with OpenAI compatible API
-- Nvidia Jetson support
-- Time stamps support on Nvidia
-- Streaming containers for Nvidia
-- Speaker diarization, speaker identification
+✅ OpenASR WER benchmarks for multiple chunk sizes
+
+✅ Performance benchmarks for NVIDIA (see `benchmark/README.md`)
+
+✅ Support for L40S, H100, RTX 4090, RTX 5090
+
+✅ Time-stamp support on Nvidia
+
+☐ Nvidia Jetson support
+
+☐ Ready-to-go containers for inference on Nvidia GPUs with OpenAI compatible API
+
+☐ Streaming containers for Nvidia
+
+☐ Speaker diarization and speaker identification
 
 ----
 
