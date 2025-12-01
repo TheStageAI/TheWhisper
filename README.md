@@ -296,8 +296,6 @@ To get commercial license for bigger number of GPUs to use TheStage AI optimized
 
 ✅ OpenASR WER benchmarks for multiple chunk sizes
 
-✅ Latency, memory, power benchmarks for Apple + NVIDIA (see `benchmark/README.md`)
-
 ✅ Support for L40S, H100, RTX 4090, RTX 5090
 
 ✅ Time-stamp support on Nvidia
