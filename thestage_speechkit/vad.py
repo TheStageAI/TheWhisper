@@ -30,7 +30,9 @@ def batched_vad(model, x, sampling_rate: int = 16000, threshold: float = 0.1):
             pad = 512 - remainder
             rem_padded = torch.nn.functional.pad(rem, (0, pad))
             out_rem = model(rem_padded.unsqueeze(0), sampling_rate)
-            out_rem_tensor = out_rem if isinstance(out_rem, torch.Tensor) else torch.tensor(out_rem)
+            out_rem_tensor = (
+                out_rem if isinstance(out_rem, torch.Tensor) else torch.tensor(out_rem)
+            )
             probs_parts.append(out_rem_tensor.view(-1))
 
         if not probs_parts:

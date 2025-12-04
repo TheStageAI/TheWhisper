@@ -2,9 +2,13 @@ import torch
 import torch.nn.functional as F
 from typing import Union, Optional
 from transformers import (
-    AutomaticSpeechRecognitionPipeline, SequenceFeatureExtractor, PreTrainedTokenizer
+    AutomaticSpeechRecognitionPipeline,
+    SequenceFeatureExtractor,
+    PreTrainedTokenizer,
 )
-from transformers import WhisperForConditionalGeneration as HFWhisperForConditionalGeneration
+from transformers import (
+    WhisperForConditionalGeneration as HFWhisperForConditionalGeneration,
+)
 from transformers import WhisperProcessor, WhisperFeatureExtractor, WhisperTokenizer
 
 
@@ -37,43 +41,48 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
     ):
         if type(model) is str:
             model_name = model
-            
+
             if model_size is not None:
                 from elastic_models.transformers import WhisperForConditionalGeneration
+
                 model = WhisperForConditionalGeneration.from_pretrained(
-                    model_name, 
-                    mode=model_size, 
-                    chunk_length=chunk_length_s, 
-                    torch_dtype=torch_dtype
+                    model_name,
+                    mode=model_size,
+                    chunk_length=chunk_length_s,
+                    torch_dtype=torch_dtype,
                 )
             else:
                 model = HFWhisperForConditionalGeneration.from_pretrained(
                     model_name, torch_dtype=torch_dtype
                 )
-            
+
             if feature_extractor is None:
                 feature_extractor = WhisperFeatureExtractor.from_pretrained(
                     model_name, torch_dtype=torch_dtype, chunk_length=chunk_length_s
                 )
-            
+
             if tokenizer is None:
                 tokenizer = WhisperTokenizer.from_pretrained(
                     model_name, torch_dtype=torch_dtype
                 )
         else:
             if feature_extractor is None:
-                raise ValueError("feature_extractor must be provided when passing a model instance")
+                raise ValueError(
+                    "feature_extractor must be provided when passing a model instance"
+                )
             if tokenizer is None:
-                raise ValueError("tokenizer must be provided when passing a model instance")
+                raise ValueError(
+                    "tokenizer must be provided when passing a model instance"
+                )
 
         super().__init__(
-            model, 
-            feature_extractor=feature_extractor, 
-            tokenizer=tokenizer, 
-            device=device, 
+            model,
+            feature_extractor=feature_extractor,
+            tokenizer=tokenizer,
+            device=device,
             chunk_length_s=chunk_length_s,
-            torch_dtype=torch_dtype, 
-            **kwargs
+            torch_dtype=torch_dtype,
+            **kwargs,
         )
         if chunk_length_s < 30:
             if isinstance(model, HFWhisperForConditionalGeneration):

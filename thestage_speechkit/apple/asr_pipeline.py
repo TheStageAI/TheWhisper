@@ -1,8 +1,13 @@
 import torch
 from typing import Union, Optional
 from transformers import (
-    AutomaticSpeechRecognitionPipeline, SequenceFeatureExtractor, PreTrainedTokenizer,
-    WhisperProcessor, WhisperFeatureExtractor, WhisperTokenizer, WhisperConfig
+    AutomaticSpeechRecognitionPipeline,
+    SequenceFeatureExtractor,
+    PreTrainedTokenizer,
+    WhisperProcessor,
+    WhisperFeatureExtractor,
+    WhisperTokenizer,
+    WhisperConfig,
 )
 
 from .model import TheWhisperForConditionalGeneration
@@ -14,7 +19,7 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
         model: Union[str, TheWhisperForConditionalGeneration],
         feature_extractor: Optional[SequenceFeatureExtractor] = None,
         tokenizer: Optional[PreTrainedTokenizer] = None,
-        model_size: str = 'S',
+        model_size: str = "S",
         chunk_length_s: int = 30,
         device: str = "cpu",
         torch_dtype: Optional[torch.dtype] = None,
@@ -24,10 +29,10 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
             model_name = model
             config = WhisperConfig.from_pretrained(model_name)
             model = TheWhisperForConditionalGeneration.from_pretrained(
-                model_name, 
-                mode=model_size, 
+                model_name,
+                mode=model_size,
                 chunk_length=chunk_length_s,
-                torch_dtype=torch_dtype
+                torch_dtype=torch_dtype,
             )
             processor = WhisperProcessor.from_pretrained(
                 model_name, chunk_length=chunk_length_s
@@ -36,17 +41,22 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
             tokenizer = processor.tokenizer
         else:
             if feature_extractor is None:
-                raise ValueError("feature_extractor must be provided when passing a model instance")
+                raise ValueError(
+                    "feature_extractor must be provided when passing a model instance"
+                )
             if tokenizer is None:
-                raise ValueError("tokenizer must be provided when passing a model instance")
+                raise ValueError(
+                    "tokenizer must be provided when passing a model instance"
+                )
 
         super().__init__(
-            model, 
-            feature_extractor=feature_extractor, 
-            tokenizer=tokenizer, device=device, 
+            model,
+            feature_extractor=feature_extractor,
+            tokenizer=tokenizer,
+            device=device,
             chunk_length_s=chunk_length_s,
-            torch_dtype=torch_dtype, 
-            **kwargs
+            torch_dtype=torch_dtype,
+            **kwargs,
         )
         self._set_chunk_length(chunk_length_s)
 

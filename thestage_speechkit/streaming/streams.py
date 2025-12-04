@@ -12,6 +12,7 @@ import numpy as np
 # FileStream
 # ------------------------------
 
+
 class ArrayStream:
     """
     Stream audio chunks from a numpy array with optional real-time pacing.
@@ -22,6 +23,7 @@ class ArrayStream:
         * If elapsed < step -> wait remaining time and return step-size chunk.
         * If elapsed >= step -> return chunk sized (elapsed + step) seconds.
     """
+
     def __init__(
         self,
         audio_data: np.ndarray,
@@ -43,10 +45,14 @@ class ArrayStream:
 
         if not self.real_time:
             chunk_size = int(self.step_size_s * self.sample_rate)
-            chunk = self.audio_data[self._current_position:self._current_position + chunk_size]
+            chunk = self.audio_data[
+                self._current_position : self._current_position + chunk_size
+            ]
             self._current_position += chunk_size
         else:
-            elapsed = None if self._last_call_t is None else (time.time() - self._last_call_t)
+            elapsed = (
+                None if self._last_call_t is None else (time.time() - self._last_call_t)
+            )
 
             if elapsed is None:
                 chunk_size = int(self.step_size_s * self.sample_rate)
@@ -57,7 +63,9 @@ class ArrayStream:
                     time.sleep(self.step_size_s - elapsed)
                     chunk_size = int(self.step_size_s * self.sample_rate)
 
-            chunk = self.audio_data[self._current_position:self._current_position + chunk_size]
+            chunk = self.audio_data[
+                self._current_position : self._current_position + chunk_size
+            ]
             self._current_position += chunk_size
             self._last_call_t = time.time()
 
@@ -65,7 +73,7 @@ class ArrayStream:
             self._eof = True
 
         return chunk.astype(np.float32, copy=False)
-    
+
     def close(self):
         self._current_position = 0
         self._last_call_t = None
@@ -83,6 +91,7 @@ class FileStream(ArrayStream):
         * If elapsed < step -> wait remaining time and return step-size chunk.
         * If elapsed >= step -> return chunk sized (elapsed + step) seconds.
     """
+
     def __init__(
         self,
         path: str,
@@ -96,14 +105,17 @@ class FileStream(ArrayStream):
             audio_data = resample(audio_data, orgi_sr=sr, target_sr=sample_rate)
         super().__init__(audio_data, step_size_s, sample_rate, real_time)
 
+
 # ------------------------------
 # MicStream
 # ------------------------------
+
 
 class MicStream:
     """
     Real-time microphone stream.
     """
+
     def __init__(
         self,
         step_size_s: float = 0.5,
@@ -131,11 +143,11 @@ class MicStream:
         while True:
             chunk, _ = self.stream.read(int(self.step_size_s * self.sample_rate))
             self.queue.append(chunk.squeeze())
-    
+
     def next_chunk(self) -> Optional[np.ndarray]:
         if not self.read_thread.is_alive():
             self.read_thread.start()
-        
+
         while not self.queue:
             time.sleep(0.01)
         chunk = np.concatenate(self.queue, axis=0)
@@ -157,10 +169,12 @@ class MicStream:
 # StdoutStream
 # ------------------------------
 
+
 class StdoutStream:
     """
     Stream approved and assumption words to stdout.
     """
+
     def __init__(self):
         self.hide_cursor = "\x1b[?25l"
         self.show_cursor = "\x1b[?25h"
@@ -171,8 +185,8 @@ class StdoutStream:
         self.approved_words = []
 
     def write(self, approved: list[str], assumption: list[str]):
-        approved = [token['text'].strip() for token in approved]
-        assumption = [token['text'].strip() for token in assumption]
+        approved = [token["text"].strip() for token in approved]
+        assumption = [token["text"].strip() for token in assumption]
         self.approved_words.extend(approved)
 
         new_committed_str = " ".join(self.approved_words)
@@ -183,7 +197,7 @@ class StdoutStream:
             sys.stdout.write(self.clear_to_eol)
 
         if new_committed_str.startswith(self.committed_str):
-            delta = new_committed_str[len(self.committed_str):]
+            delta = new_committed_str[len(self.committed_str) :]
             if delta:
                 sys.stdout.write(delta)
         else:
