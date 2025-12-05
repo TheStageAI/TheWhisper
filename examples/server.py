@@ -40,6 +40,8 @@ class StreamingManager:
             model='TheStageAI/thewhisper-large-v3-turbo',
             chunk_length_s=15,
             platform='apple',
+            agreement_history_size=5,
+            agreement_majority_threshold=2,
         )
         print("Streaming backend initialized")
         return True
