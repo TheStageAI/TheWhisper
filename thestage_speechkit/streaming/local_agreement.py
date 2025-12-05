@@ -56,6 +56,24 @@ class LocalAgreement:
         self.history.append(words)
         self._update_committed()
 
+    # def _update_commited(self) -> None:
+    #     """
+    #     """
+    #     self.last_commited = []
+        
+    #     if len(self.history) < self.majority_threshold:
+    #         return
+
+    # def _filter_history(self, time: float) -> None:
+    #     new_history_list = []
+    #     for history_element in self.history:
+    #         history_element_filtered = [
+    #             word for word in history_element if word['start'] >= time
+    #         ]
+    #         if len(history_element_filtered) > 0:
+    #             new_history_list.append(history_element_filtered)
+    #     self.history = new_history_list
+
     def _update_committed(self) -> None:
         """
         Update the list of committed words based on the current history.
@@ -73,7 +91,11 @@ class LocalAgreement:
             filtered_history_element: List[Dict[str, Any]] = []
             for word in history_element[::-1]:
                 if word['start'] >= self.last_committed_time - 0.2:
-                    if len(self.committed) > 0 and self._equal_texts(word, self.committed[-1]) and self._words_time_overlap(word, self.committed[-1]):
+                    if (
+                        len(self.committed) > 0 
+                        and self._equal_texts(word, self.committed[-1]) 
+                        and self._words_time_overlap(word, self.committed[-1])
+                    ):
                         break
                     else:
                         filtered_history_element.append(word)
@@ -95,7 +117,7 @@ class LocalAgreement:
                 if (
                     len(self.committed) > 0 and i == 0 
                     and self._equal_texts(word, self.committed[-1]) 
-                    and self._words_time_overlap(word, self.committed[-1], offset=0)
+                    and self._words_time_overlap(word, self.committed[-1])
                 ):
                     pass
                 else:
@@ -124,8 +146,8 @@ class LocalAgreement:
         """
         w1_text: str = w1['text'].lower().strip()
         w2_text: str = w2['text'].lower().strip()
-                    
-        return edit_distance(w1_text, w2_text) <= 1
+        # return edit_distance(w1_text, w2_text) <= 1
+        return edit_distance(w1_text, w2_text) == 0
 
     def _words_time_overlap(self, w1: Dict[str, Any], w2: Dict[str, Any], offset: float = 0) -> bool:
         """
