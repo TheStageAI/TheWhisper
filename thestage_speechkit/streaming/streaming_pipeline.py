@@ -237,6 +237,7 @@ class StreamingPipeline:
             'num_beams': 1,
             'do_sample': False,
             'max_new_tokens': max_new_tokens,
+            "language": self.language,
         }
         
         result: Dict[str, Any] = self.asr_pipeline(
