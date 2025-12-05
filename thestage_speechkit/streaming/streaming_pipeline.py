@@ -43,7 +43,6 @@ class TranscriptionBackend(ABC):
     def transcribe(
         self,
         audio: np.ndarray,
-        prefix_text: Optional[List[Dict[str, Any]]],
         buffer_start_time: float,
         sample_rate: int,
     ) -> List[Dict[str, Any]]: ...
@@ -106,7 +105,6 @@ class RemoteAPIBackend(TranscriptionBackend):
     def transcribe(
         self,
         audio: np.ndarray,
-        prefix_text: Optional[List[Dict[str, Any]]],
         buffer_start_time: float,
         sample_rate: int,
     ) -> List[Dict[str, Any]]:
@@ -201,6 +199,7 @@ class LocalWhisperBackend(TranscriptionBackend):
 
         self.chunk_length_s = chunk_length_s
         self.device = device
+        self.language = language
 
         self.asr_pipeline = ASRPipeline(
             model,
@@ -212,6 +211,11 @@ class LocalWhisperBackend(TranscriptionBackend):
             tokenizer=tokenizer,
         )
 
+        self.chunk_length_s: float = chunk_length_s
+        self.window_size: float = chunk_length_s - 2
+        self.sample_rate: int = 16000
+        self.language: str = language
+        
         special_tokens: str = f"<|startoftranscript|><|{language}|><|transcribe|>"
         self.encoded_special_tokens: torch.Tensor = self.asr_pipeline.tokenizer(
             special_tokens, return_tensors="pt", add_special_tokens=False
@@ -220,85 +224,49 @@ class LocalWhisperBackend(TranscriptionBackend):
     def transcribe(
         self,
         audio: np.ndarray,
-        prefix_text: Optional[List[Dict[str, Any]]],
         buffer_start_time: float,
         sample_rate: int,
     ) -> List[Dict[str, Any]]:
+        
         audio_duration: float = len(audio) / sample_rate
 
-        if prefix_text is not None and len(prefix_text) > 0:
-            # Time since last prefix word in absolute time; we only need the gap,
-            # so subtract starts.
-            time_since_last_prefix_word = (
-                buffer_start_time + audio_duration - prefix_text[-1]["end"]
-            )
-            rounded_time = int(max(time_since_last_prefix_word, 0))
-            max_new_tokens = 16 + rounded_time * 16
-        else:
-            max_new_tokens = 32
+        audio_duration: float = len(audio) / self.sample_rate
+        max_new_tokens = 64
 
         generate_kwargs: Dict[str, Any] = {
-            "use_cache": True,
-            "num_beams": 1,
-            "do_sample": False,
-            "max_new_tokens": max_new_tokens,
+            'use_cache': True,
+            'num_beams': 1,
+            'do_sample': False,
+            'max_new_tokens': max_new_tokens,
+            "language": self.language,
         }
-
-        if prefix_text is not None and len(prefix_text) > 0:
-            prefix_text_str: str = "".join([w["text"] for w in prefix_text])
-            decoder_input_ids: torch.Tensor = self.asr_pipeline.tokenizer(
-                prefix_text_str, return_tensors="pt", add_special_tokens=False
-            ).input_ids
-            generate_kwargs["decoder_input_ids"] = torch.cat(
-                [self.encoded_special_tokens, decoder_input_ids], dim=1
-            ).to(self.device)
-
+        
         result: Dict[str, Any] = self.asr_pipeline(
             audio,
-            return_timestamps="word",
+            return_timestamps='word',
             generate_kwargs=generate_kwargs,
             chunk_length_s=self.chunk_length_s,
         )
-
-        if _compression_ratio(result["text"]) > 2.2:
+        
+        if _compression_ratio(result['text']) > 2.2:
             return []
-
+        
+        generated_tokens: List[Dict[str, Any]] = []
         max_word_duration: float = 1.0
 
-        # Filter chunks similar to the original implementation
-        new_chunks_lst = []
-        max_end_time = 0.0
-        for token in result["chunks"]:
-            end_time = token["timestamp"][1]
-            if end_time is not None:
-                if end_time > max_end_time and end_time < self.chunk_length_s:
-                    max_end_time = end_time
-                    new_chunks_lst.append(token)
+        for token in result['chunks']:
+            if token['timestamp'][1] is None:
+                if audio_duration - token['timestamp'][0] < max_word_duration:
+                    token['timestamp'] = (token['timestamp'][0], audio_duration)
                 else:
-                    # drop token
-                    pass
-            else:
-                new_chunks_lst.append(token)
-        result["chunks"] = new_chunks_lst
-
-        tokens: List[Dict[str, Any]] = []
-        for token in result["chunks"]:
-            start_rel, end_rel = token["timestamp"]
-            if end_rel is None:
-                if audio_duration - start_rel < max_word_duration:
-                    end_rel = audio_duration
-                else:
-                    end_rel = start_rel + max_word_duration
-
-            tokens.append(
-                {
-                    "text": token["text"],
-                    "start": buffer_start_time + start_rel,
-                    "end": buffer_start_time + end_rel,
-                }
-            )
-
-        return tokens
+                    token['timestamp'] = (token['timestamp'][0], token['timestamp'][0] + max_word_duration)
+            generated_tokens.append({
+                'text': token['text'],
+                'start': token['timestamp'][0] + self.buffer_start_time,
+                'end': token['timestamp'][1] + self.buffer_start_time
+            })
+        
+        return generated_tokens
 
 
 # ======================
@@ -406,6 +374,8 @@ class StreamingPipeline:
         else:
             self.vad_model = None
 
+        # Local agreement maintains a history of transcriptions and decides which
+        # words are "committed" (final) across multiple decoding passes.
         self.local_agreement = LocalAgreement(
             history_size=agreement_history_size,
             majority_threshold=agreement_majority_threshold,
@@ -413,7 +383,6 @@ class StreamingPipeline:
 
         self.current_audio_buffer: Optional[np.ndarray] = None
         self.buffer_start_time: float = 0.0
-        self._prefix_tokens: List[Dict[str, Any]] = []
         self.current_time: float = 0.0
 
         self.audio_queue: List[np.ndarray] = []
@@ -442,98 +411,96 @@ class StreamingPipeline:
 
         chunk: np.ndarray = np.concatenate(self.audio_queue)
         self.audio_queue = []
-        contains_speech: bool = True
         self.current_time += len(chunk) / self.sample_rate
 
-        if self.vad_model is not None:
-            contains_speech = batched_vad(
-                self.vad_model, chunk,
-                sampling_rate=self.sample_rate,
-                threshold=self.speech_threshold
-            )
-            if not contains_speech:
-                self.no_speech_streak += 1
-            else:
-                self.no_speech_streak = 0
-
-            if self.no_speech_streak >= 3:
-                if self.current_audio_buffer is None:
-                    self.current_audio_buffer = chunk
-                else:
-                    self.current_audio_buffer = np.concatenate([self.current_audio_buffer, chunk])
-
-                if len(self.current_audio_buffer) > self.window_size * self.sample_rate:
-                    self._trim_audio_buffer(self.window_size)
-
-                return [], []
-
-        if (
-            self.current_audio_buffer is not None
-            and len(self.current_audio_buffer) / self.sample_rate > 1
-        ):
+        # Extend the audio buffer with the new chunk
+        if self.current_audio_buffer is None:
+            self.current_audio_buffer = chunk
+        else:
             self.current_audio_buffer = np.concatenate(
                 [self.current_audio_buffer, chunk]
             )
 
-            if len(self.current_audio_buffer) > self.window_size * self.sample_rate:
-                self._trim_audio_buffer(self.window_size)
+        # Ensure the buffer does not grow unbounded
+        if len(self.current_audio_buffer) > self.window_size * self.sample_rate:
+            self._trim_audio_buffer()
 
-            self.buffer_start_time = self.current_time - (
-                len(self.current_audio_buffer) / self.sample_rate
+        # Run transcription on the current buffer
+        new_words = self._run_transcription(self.current_audio_buffer)
+
+        # Update local agreement with the new transcription
+        self.local_agreement.add_transcription(new_words)
+
+        # Words that have just become "final" since the last call
+        committed_now = self.local_agreement.get_last_commited_words()
+        # Optional unstable tail that is not yet committed
+        unstable_tail = self.local_agreement.not_committed_words
+
+        return committed_now, unstable_tail
+
+    def _trim_audio_buffer(self) -> None:
+        """
+        Trim the audio buffer to keep at most `self.window_size` seconds,
+        preferably cutting at the end of a committed word to avoid
+        chopping words that may still change in future transcriptions.
+        """
+        if self.current_audio_buffer is None or len(self.current_audio_buffer) == 0:
+            return
+
+        max_seconds: float = self.window_size
+
+        committed = self.local_agreement.get_committed_words() # or get_last_commited_words() ? 
+
+        # If we have no committed words yet, fall back to a simple tail crop.
+        if not committed:
+            self.current_audio_buffer = self.current_audio_buffer[
+                -int(max_seconds * self.sample_rate) :
+            ]
+            self.buffer_start_time = (
+                self.current_time
+                - len(self.current_audio_buffer) / self.sample_rate
             )
+            return
 
-            self._prefix_tokens = self._get_prefix_tokens()
+        # Earliest time we would like to keep in the buffer
+        target_start_time: float = 1. + self.current_time - max_seconds
 
-            new_tokens: List[Dict[str, Any]] = self._run_transcription(
-                self.current_audio_buffer,
-                prefix_text=self._prefix_tokens,
-            )
-            self._update_agreement(new_tokens)
-            not_committed_words = (
-                self.local_agreement.not_committed_words
-                if self.no_speech_streak == 0
-                else []
-            )
-            commited_words = self.local_agreement.get_last_commited_words()
-
-            return (commited_words, not_committed_words)
-
-        else:
-            if self.current_audio_buffer is None:
-                self.current_audio_buffer = chunk
-            else:
-                self.current_audio_buffer = np.concatenate(
-                    [self.current_audio_buffer, chunk]
-                )
-            return [], []
-
-    def _trim_audio_buffer(self, max_seconds: float = 10.0) -> None:
-        """
-        Trim the audio buffer to the configured window size.
-        """
-        self.current_audio_buffer = self.current_audio_buffer[
-            -int(max_seconds * self.sample_rate) :
-        ]
-
-    def _get_prefix_tokens(self) -> List[Dict[str, Any]]:
-        """
-        Get tokens from previous transcriptions that are still relevant to the current buffer.
-        """
-        prefix_tokens: List[Dict[str, Any]] = []
-        for token in self.local_agreement.get_committed_words()[::-1]:
-            if token["start"] >= self.buffer_start_time:
-                prefix_tokens.append(token)
+        # Find the last committed word that ends before or at target_start_time
+        cut_word = None
+        for w in committed:
+            if w['end'] <= target_start_time:
+                cut_word = w
             else:
                 break
-        self._prefix_tokens = prefix_tokens[::-1]
-        return self._prefix_tokens
 
-    def _update_agreement(self, new_tokens: List[Dict[str, Any]]) -> None:
-        """
-        Update the local agreement with new transcription tokens.
-        """
-        self.local_agreement.add_transcription(new_tokens)
-
+        if cut_word is not None:
+            # Cut buffer at the end of this committed word
+            new_buffer_start_time: float = cut_word['end']
+            delta_sec: float = new_buffer_start_time - self.buffer_start_time
+            if delta_sec > 0:
+                delta_samples: int = int(delta_sec * self.sample_rate)
+                self.current_audio_buffer = self.current_audio_buffer[delta_samples:]
+                self.buffer_start_time = new_buffer_start_time
+            else:
+                # If for some numerical reason delta_sec is not positive,
+                # fall back to a simple tail crop.
+                self.current_audio_buffer = self.current_audio_buffer[
+                    -int(max_seconds * self.sample_rate) :
+                ]
+                self.buffer_start_time = (
+                    self.current_time
+                    - len(self.current_audio_buffer) / self.sample_rate
+                )
+        else:
+            # No committed word early enough: simple tail crop
+            self.current_audio_buffer = self.current_audio_buffer[
+                -int(max_seconds * self.sample_rate) :
+            ]
+            self.buffer_start_time = (
+                self.current_time
+                - len(self.current_audio_buffer) / self.sample_rate
+            )
+            
     def _run_transcription(
         self,
         audio: np.ndarray,
@@ -545,7 +512,6 @@ class StreamingPipeline:
         """
         new_only_tokens = self.backend.transcribe(
             audio=audio,
-            prefix_text=prefix_text,
             buffer_start_time=self.buffer_start_time,
             sample_rate=self.sample_rate,
         )
@@ -557,9 +523,7 @@ class StreamingPipeline:
         """
         self.current_audio_buffer = None
         self.buffer_start_time = 0.0
-        self._prefix_tokens = []
         self.current_time = 0.0
         self.audio_queue = []
         self.no_speech_streak = 0
         self.speech_threshold = 0.5
-        self.local_agreement.clear()

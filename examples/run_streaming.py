@@ -25,10 +25,12 @@ warnings.filterwarnings(
 )
 
 streaming_model = StreamingPipeline(
-    model="TheStageAI/thewhisper-large-v3-turbo",
+    model='TheStageAI/thewhisper-large-v3-turbo',
     chunk_length_s=15,
-    platform="apple",
-    language="en",
+    platform='apple',
+    language='en',
+    agreement_history_size=5,
+    agreement_majority_threshold=2,
 )
 
 if args.use_mic:
