@@ -284,8 +284,8 @@ class StreamingPipeline:
         model_size: str = "S",
         chunk_length_s: int = 10,
         use_vad: bool = False,
-        agreement_history_size: int = 2,
-        agreement_majority_threshold: int = 2,
+        agreement_history_size: int = 5,
+        agreement_majority_threshold: int = 3,
         platform: str = "apple",
         torch_dtype: torch.dtype = torch.float16,
         language: str = "en",
@@ -306,7 +306,7 @@ class StreamingPipeline:
     ):
         self.sample_rate: int = sample_rate
         self.chunk_length_s: float = chunk_length_s
-        self.window_size: float = 10.0  # seconds
+        self.window_size: float = chunk_length_s - 2
 
         # Choose backend
         if backend is not None:
