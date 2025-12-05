@@ -26,7 +26,7 @@ warnings.filterwarnings(
 
 streaming_model = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
-    chunk_length_s=15,
+    chunk_length_s=10,
     platform='apple',
     language='en',
     agreement_history_size=5,
