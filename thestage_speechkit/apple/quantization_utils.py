@@ -7,7 +7,7 @@ def quantize_mlx_model(model, quant_config):
         if path in quant_config:
             return quant_config[path]
         return False
-    
+
     nn.quantize(model, class_predicate=quantization_class_predicate)
-    
+
     return model

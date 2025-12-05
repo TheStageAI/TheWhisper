@@ -1,11 +1,14 @@
 import torch
 import os
 import numpy as np
-from time import time
-from typing import List, Dict, Optional, Union, Any
+from typing import List, Dict, Optional, Any
 from transformers import SequenceFeatureExtractor, PreTrainedTokenizer
 from transformers.utils import logging as hf_logging
 import zlib
+import io
+import wave
+import httpx
+from abc import ABC, abstractmethod
 
 from .local_agreement import LocalAgreement
 from ..vad import batched_vad
@@ -14,7 +17,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 hf_logging.set_verbosity_error()
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'info')
+LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
 
 torch.set_grad_enabled(False)
 
@@ -24,46 +27,187 @@ def _compression_ratio(text) -> float:
     return len(text_bytes) / len(zlib.compress(text_bytes))
 
 
-class StreamingPipeline:
+# ======================
+# Backend interface
+# ======================
+
+
+class TranscriptionBackend(ABC):
     """
+    Strategy interface for turning an audio buffer into a list of tokens
+    of the form {"text": str, "start": float, "end": float}.
+    `start` / `end` are absolute times in seconds.
     """
-    
+
+    @abstractmethod
+    def transcribe(
+        self,
+        audio: np.ndarray,
+        buffer_start_time: float,
+        sample_rate: int,
+    ) -> List[Dict[str, Any]]: ...
+
+
+class RemoteAPIBackend(TranscriptionBackend):
+    """
+    Backend that sends audio as WAV over HTTP to a remote ASR service.
+    """
+
+    def __init__(
+        self,
+        api_url: str,
+        auth_token: str = "",
+        model_name: str = "",
+        lang_id: str = "",
+        request_timeout_s: float = 60.0,
+        bytes_per_sample: int = 2,
+    ):
+        if not api_url:
+            raise ValueError("api_url must be provided for RemoteAPIBackend")
+
+        self.api_url = api_url
+        self.auth_token = auth_token
+        self.model_name = model_name
+        self.lang_id = lang_id
+        self.request_timeout_s = request_timeout_s
+        self.bytes_per_sample = bytes_per_sample
+
+    def _audio_to_wav_bytes(self, audio: np.ndarray, sample_rate: int) -> bytes:
+        """
+        Convert mono numpy audio (float32/float64 or int16) into WAV bytes
+        compatible with the FastAPI gateway (16-bit PCM).
+        """
+        if audio.dtype != np.int16:
+            audio_float = audio.astype(np.float32)
+            audio_float = np.clip(audio_float, -1.0, 1.0)
+            audio_int16 = (audio_float * 32767.0).astype(np.int16)
+        else:
+            audio_int16 = audio
+
+        wav_buf = io.BytesIO()
+        with wave.open(wav_buf, "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(self.bytes_per_sample)
+            wf.setframerate(sample_rate)
+            wf.writeframes(audio_int16.tobytes())
+        wav_buf.seek(0)
+        return wav_buf.getvalue()
+
+    def _parse_response(self, data: Dict[str, Any]) -> str:
+        if "transcription" in data:
+            return data["transcription"]
+        if "text" in data and isinstance(data["text"], str):
+            return data["text"]
+        if "segments" in data and isinstance(data["segments"], list):
+            return " ".join(seg.get("text", "") for seg in data["segments"])
+        return ""
+
+    def transcribe(
+        self,
+        audio: np.ndarray,
+        buffer_start_time: float,
+        sample_rate: int,
+    ) -> List[Dict[str, Any]]:
+        wav_bytes = self._audio_to_wav_bytes(audio, sample_rate)
+
+        files = {
+            "file": ("chunk.wav", wav_bytes, "audio/wav"),
+        }
+
+        headers: Dict[str, str] = {}
+        if self.auth_token:
+            headers["Authorization"] = f"Bearer {self.auth_token}"
+        if self.lang_id:
+            headers["X-Lang-Id"] = self.lang_id
+        if self.model_name:
+            headers["X-Model-Name"] = self.model_name
+
+        resp = httpx.post(
+            self.api_url,
+            headers=headers,
+            files=files,
+            timeout=self.request_timeout_s,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        text = self._parse_response(data) or ""
+
+        if not text.strip():
+            return []
+
+        # Optional spam / gibberish filter
+        if _compression_ratio(text) > 2.2:
+            return []
+
+        audio_duration: float = len(audio) / sample_rate
+        words = text.strip().split()
+        if not words or audio_duration <= 0:
+            return []
+
+        num_words = len(words)
+        per_word = audio_duration / num_words
+        max_word_duration: float = 1.0
+
+        tokens: List[Dict[str, Any]] = []
+        for i, w in enumerate(words):
+            rel_start = i * per_word
+            rel_end = (i + 1) * per_word
+            duration = min(rel_end - rel_start, max_word_duration)
+
+            token_start = buffer_start_time + rel_start
+            token_end = token_start + duration
+
+            tokens.append(
+                {
+                    "text": w + (" " if i < num_words - 1 else ""),
+                    "start": token_start,
+                    "end": token_end,
+                }
+            )
+
+        return tokens
+
+
+class LocalWhisperBackend(TranscriptionBackend):
+    """
+    Backend that wraps the original local ASRPipeline implementation.
+    """
+
     def __init__(
         self,
         model: str,
-        model_size: str = 'S',
+        model_size: str = "S",
         chunk_length_s: int = 10,
-        use_vad: bool = False,
-        agreement_history_size: int = 5,
-        agreement_majority_threshold: int = 2,
-        platform: str = 'apple',
+        platform: str = "apple",
         torch_dtype: torch.dtype = torch.float16,
-        language: str = 'en',
+        language: str = "en",
         feature_extractor: Optional[SequenceFeatureExtractor] = None,
         tokenizer: Optional[PreTrainedTokenizer] = None,
     ):
-        """
-        """
-
-        if platform == 'apple':
+        if platform == "apple":
             from ..apple import ASRPipeline
-            device = 'cpu'
-        elif platform == 'nvidia':
+
+            device = "cpu"
+        elif platform == "nvidia":
             from ..nvidia import ASRPipeline
-            device = 'cuda'
+
+            device = "cuda"
         else:
             raise ValueError(f"Invalid platform: {platform}")
-        
+
+        self.chunk_length_s = chunk_length_s
+        self.device = device
+        self.language = language
+
         self.asr_pipeline = ASRPipeline(
-            model, 
-            model_size=model_size, 
-            chunk_length_s=chunk_length_s, 
+            model,
+            model_size=model_size,
+            chunk_length_s=chunk_length_s,
             torch_dtype=torch_dtype,
             device=device,
             feature_extractor=feature_extractor,
-            tokenizer=tokenizer
+            tokenizer=tokenizer,
         )
-        self.device = device
 
         self.chunk_length_s: float = chunk_length_s
         self.window_size: float = chunk_length_s - 2
@@ -74,13 +218,156 @@ class StreamingPipeline:
         self.encoded_special_tokens: torch.Tensor = self.asr_pipeline.tokenizer(
             special_tokens, return_tensors="pt", add_special_tokens=False
         ).input_ids
+
+    def transcribe(
+        self,
+        audio: np.ndarray,
+        buffer_start_time: float,
+        sample_rate: int,
+    ) -> List[Dict[str, Any]]:
         
+        audio_duration: float = len(audio) / sample_rate
+
+        audio_duration: float = len(audio) / self.sample_rate
+        max_new_tokens = 64
+
+        generate_kwargs: Dict[str, Any] = {
+            'use_cache': True,
+            'num_beams': 1,
+            'do_sample': False,
+            'max_new_tokens': max_new_tokens,
+            "language": self.language,
+        }
+        
+        result: Dict[str, Any] = self.asr_pipeline(
+            audio,
+            return_timestamps='word',
+            generate_kwargs=generate_kwargs,
+            chunk_length_s=self.chunk_length_s,
+        )
+        
+        if _compression_ratio(result['text']) > 2.2:
+            return []
+        
+        generated_tokens: List[Dict[str, Any]] = []
+        max_word_duration: float = 1.0
+
+        for token in result['chunks']:
+            if token['timestamp'][1] is None:
+                if audio_duration - token['timestamp'][0] < max_word_duration:
+                    token['timestamp'] = (token['timestamp'][0], audio_duration)
+                else:
+                    token['timestamp'] = (token['timestamp'][0], token['timestamp'][0] + max_word_duration)
+            generated_tokens.append({
+                'text': token['text'],
+                'start': token['timestamp'][0] + buffer_start_time,
+                'end': token['timestamp'][1] + buffer_start_time
+            })
+        
+        return generated_tokens
+
+
+# ======================
+# StreamingPipeline
+# ======================
+
+
+class StreamingPipeline:
+    """
+    High-level streaming wrapper around a TranscriptionBackend.
+    Maintains buffers, (optional) VAD, and local agreement logic.
+    """
+
+    def __init__(
+        self,
+        model: str,
+        model_size: str = "S",
+        chunk_length_s: int = 10,
+        use_vad: bool = False,
+        agreement_history_size: int = 5,
+        agreement_majority_threshold: int = 3,
+        platform: str = "apple",
+        torch_dtype: torch.dtype = torch.float16,
+        language: str = "en",
+        feature_extractor: Optional[SequenceFeatureExtractor] = None,
+        tokenizer: Optional[PreTrainedTokenizer] = None,
+        # New: injectable backend (strategy). If None, we fall back to constructing
+        # a local or remote backend based on the flags below.
+        backend: Optional[TranscriptionBackend] = None,
+        # Optional convenience flags to auto-construct a RemoteAPIBackend
+        use_remote_api: bool = False,
+        api_url: Optional[str] = None,
+        api_auth_token: Optional[str] = None,
+        api_model_name: Optional[str] = None,
+        api_lang_id: Optional[str] = None,
+        request_timeout_s: Optional[float] = None,
+        bytes_per_sample: int = 2,
+        sample_rate: int = 16000,
+    ):
+        self.sample_rate: int = sample_rate
+        self.chunk_length_s: float = chunk_length_s
+        self.window_size: float = chunk_length_s - 2
+
+        # Choose backend
+        if backend is not None:
+            self.backend = backend
+        else:
+            if use_remote_api:
+                # Default remote backend based on environment / kwargs
+                resolved_api_url = api_url or os.getenv("TRITON_URL", "")
+                if not resolved_api_url:
+                    raise ValueError(
+                        "TRITON_URL / api_url must be set when use_remote_api=True"
+                    )
+
+                auth_token = (
+                    api_auth_token
+                    if api_auth_token is not None
+                    else os.getenv("TRITON_AUTH_TOKEN", "")
+                )
+                model_name = (
+                    api_model_name
+                    if api_model_name is not None
+                    else os.getenv("TRITON_MODEL_NAME", "")
+                )
+                lang_id = (
+                    api_lang_id
+                    if api_lang_id is not None
+                    else os.getenv("TRITON_LANG_ID", "")
+                )
+                timeout_val = (
+                    request_timeout_s
+                    if request_timeout_s is not None
+                    else float(os.getenv("REQUEST_TIMEOUT_SECONDS", "60"))
+                )
+
+                self.backend = RemoteAPIBackend(
+                    api_url=resolved_api_url,
+                    auth_token=auth_token,
+                    model_name=model_name,
+                    lang_id=lang_id,
+                    request_timeout_s=timeout_val,
+                    bytes_per_sample=bytes_per_sample,
+                )
+            else:
+                # Default local backend (original behaviour)
+                self.backend = LocalWhisperBackend(
+                    model=model,
+                    model_size=model_size,
+                    chunk_length_s=chunk_length_s,
+                    platform=platform,
+                    torch_dtype=torch_dtype,
+                    language=language,
+                    feature_extractor=feature_extractor,
+                    tokenizer=tokenizer,
+                )
+
         self.no_speech_streak: int = 0
         self.speech_threshold: float = 0.5
 
         if use_vad:
             self.vad_model, _ = torch.hub.load(
-                repo_or_dir='snakers4/silero-vad', model='silero_vad'
+                repo_or_dir="snakers4/silero-vad", model="silero_vad"
             )
         else:
             self.vad_model = None
@@ -99,27 +386,23 @@ class StreamingPipeline:
         self.audio_queue: List[np.ndarray] = []
 
     def __call__(self, chunk: np.ndarray) -> List[Dict[str, Any]]:
-        """
-        """
+        """ """
         self.add_new_chunk(chunk)
         return self.process_new_chunk()
-    
+
     def add_new_chunk(self, chunk: np.ndarray) -> None:
         """
         Add a new audio chunk to the processing queue.
-        
-        Args:
-            chunk (np.ndarray): Audio chunk as numpy array
         """
-        # Check license validity before processing
         self.audio_queue.append(chunk)
 
     def process_new_chunk(self) -> List[Dict[str, Any]]:
         """
         Process all queued audio chunks.
-        
+
         Returns:
-            List[Dict[str, Any]]: List of newly committed words with their timestamps
+            Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+            (committed_words, not_committed_words)
         """
         if len(self.audio_queue) == 0:
             return [], []
@@ -139,10 +422,6 @@ class StreamingPipeline:
         # Ensure the buffer does not grow unbounded
         if len(self.current_audio_buffer) > self.window_size * self.sample_rate:
             self._trim_audio_buffer()
-
-        # Require a minimum amount of audio before decoding
-        # if len(self.current_audio_buffer) / self.sample_rate <= 3.0:
-        #     return [], []
 
         # Run transcription on the current buffer
         new_words = self._run_transcription(self.current_audio_buffer)
@@ -219,54 +498,20 @@ class StreamingPipeline:
                 self.current_time
                 - len(self.current_audio_buffer) / self.sample_rate
             )
-
-    def _run_transcription(self, audio: np.ndarray) -> List[Dict[str, Any]]:
-        """
-        Run the ASR model on the audio buffer.
-        
-        Args:
-            audio (np.ndarray): Audio buffer to transcribe
             
-        Returns:
-            List[Dict[str, Any]]: List of transcribed tokens with timestamps
+    def _run_transcription(
+        self,
+        audio: np.ndarray,
+    ) -> List[Dict[str, Any]]:
         """
-        audio_duration: float = len(audio) / self.sample_rate
-        max_new_tokens = 64
-
-        generate_kwargs: Dict[str, Any] = {
-            'use_cache': True,
-            'num_beams': 1,
-            'do_sample': False,
-            'max_new_tokens': max_new_tokens,
-            "language": self.language,
-        }
-        
-        result: Dict[str, Any] = self.asr_pipeline(
-            audio,
-            return_timestamps='word',
-            generate_kwargs=generate_kwargs,
-            chunk_length_s=self.chunk_length_s,
+        Delegate to the backend.
+        """
+        new_tokens = self.backend.transcribe(
+            audio=audio,
+            buffer_start_time=self.buffer_start_time,
+            sample_rate=self.sample_rate,
         )
-        
-        if _compression_ratio(result['text']) > 2.2:
-            return []
-        
-        generated_tokens: List[Dict[str, Any]] = []
-        max_word_duration: float = 1.0
-
-        for token in result['chunks']:
-            if token['timestamp'][1] is None:
-                if audio_duration - token['timestamp'][0] < max_word_duration:
-                    token['timestamp'] = (token['timestamp'][0], audio_duration)
-                else:
-                    token['timestamp'] = (token['timestamp'][0], token['timestamp'][0] + max_word_duration)
-            generated_tokens.append({
-                'text': token['text'],
-                'start': token['timestamp'][0] + self.buffer_start_time,
-                'end': token['timestamp'][1] + self.buffer_start_time
-            })
-        
-        return generated_tokens
+        return new_tokens
 
     def clear(self) -> None:
         """

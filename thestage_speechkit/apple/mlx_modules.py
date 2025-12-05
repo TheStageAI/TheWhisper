@@ -69,7 +69,7 @@ class MultiHeadAttention(nn.Module):
             wv, qk = self.fast_qkv_attention(q, k, v, mask, alignment_heads)
         else:
             wv, qk = self.qkv_attention(q, k, v, mask, alignment_heads)
-        
+
         return self.out(wv), (k, v), qk
 
     def qkv_attention(self, q, k, v, mask=None, alignment_heads=None):
@@ -93,7 +93,7 @@ class MultiHeadAttention(nn.Module):
             qk = None
 
         return out, qk
-    
+
     def fast_qkv_attention(self, q, k, v, mask=None, alignment_heads=None):
         n_batch, n_ctx, n_state = q.shape
         scale = (n_state // self.n_head) ** -0.25
@@ -104,9 +104,7 @@ class MultiHeadAttention(nn.Module):
         if mask is not None:
             mask = mask[:n_ctx, :n_ctx].astype(q.dtype)
 
-        out = mx.fast.scaled_dot_product_attention(
-            q, k, v, scale=1., mask=mask
-        )
+        out = mx.fast.scaled_dot_product_attention(q, k, v, scale=1.0, mask=mask)
         out = out.transpose(0, 2, 1, 3)
         out = out.reshape(n_batch, n_ctx, n_state)
         qk = None
@@ -122,7 +120,13 @@ class MultiHeadAttention(nn.Module):
 
 
 class ResidualAttentionBlock(nn.Module):
-    def __init__(self, n_state: int, n_head: int, cross_attention: bool = False, max_source_positions: int = 1500):
+    def __init__(
+        self,
+        n_state: int,
+        n_head: int,
+        cross_attention: bool = False,
+        max_source_positions: int = 1500,
+    ):
         super().__init__()
         self.alignment_heads = None
         self.max_source_positions = max_source_positions
@@ -143,25 +147,24 @@ class ResidualAttentionBlock(nn.Module):
     def __call__(self, x, xa=None, mask=None, kv_cache=None):
         kv, cross_kv = kv_cache if kv_cache else (None, None)
         y, kv, self_qk = self.attn(
-            self.attn_ln(x), mask=mask, 
-            kv_cache=kv, 
-            fast_qkv_attention=True
+            self.attn_ln(x), mask=mask, kv_cache=kv, fast_qkv_attention=True
         )
         x += y
         cross_qk = None
-        
+
         if self.cross_attn:
-            xa = xa[:, :self.max_source_positions, :]
+            xa = xa[:, : self.max_source_positions, :]
             y, cross_kv, cross_qk = self.cross_attn(
-                self.cross_attn_ln(x), xa, 
-                kv_cache=cross_kv, 
+                self.cross_attn_ln(x),
+                xa,
+                kv_cache=cross_kv,
                 fast_qkv_attention=True,
                 alignment_heads=self.alignment_heads,
             )
             x += y
-        
+
         x = x + self.mlp2(nn.gelu(self.mlp1(self.mlp_ln(x))))
-        
+
         if self.cross_attn is None:
             return x, (kv, cross_kv), self_qk
         else:
@@ -190,10 +193,10 @@ class AudioEncoder(nn.Module):
     def __call__(self, x):
         x = nn.gelu(self.conv1(x))
         x = nn.gelu(self.conv2(x))
-        x = x + self._positional_embedding[:x.shape[1]]
+        x = x + self._positional_embedding[: x.shape[1]]
 
         if self.size is not None and self.size < 1500:
-            x = x[:, :self.size, :]
+            x = x[:, : self.size, :]
 
         for i, block in enumerate(self.blocks):
             x, _, _ = block(x)
@@ -219,11 +222,18 @@ class TextDecoder(nn.Module):
         self.positional_embedding = mx.zeros((n_ctx, n_state))
 
         self.blocks = [
-            ResidualAttentionBlock(n_state, n_head, cross_attention=True, max_source_positions=max_source_positions)
+            ResidualAttentionBlock(
+                n_state,
+                n_head,
+                cross_attention=True,
+                max_source_positions=max_source_positions,
+            )
             for _ in range(n_layer)
         ]
         self.ln = nn.LayerNorm(n_state)
-        self._mask = nn.MultiHeadAttention.create_additive_causal_mask(n_ctx).astype(dtype)
+        self._mask = nn.MultiHeadAttention.create_additive_causal_mask(n_ctx).astype(
+            dtype
+        )
 
     def __call__(self, x, xa, kv_cache=None):
         """
@@ -240,17 +250,15 @@ class TextDecoder(nn.Module):
 
         if kv_cache is None:
             kv_cache = [None] * len(self.blocks)
-        
+
         qk = [None] * len(self.blocks)
 
         for e, block in enumerate(self.blocks):
-            x, kv_cache[e], qk[e] = block(
-                x, xa, mask=self._mask, kv_cache=kv_cache[e]
-            )
-        
+            x, kv_cache[e], qk[e] = block(x, xa, mask=self._mask, kv_cache=kv_cache[e])
+
         x = self.ln(x)
         x = self.token_embedding.as_linear(x)
-        
+
         return x, kv_cache, qk
 
     def set_alignment_heads(self, alignment_heads):
@@ -262,14 +270,14 @@ class TextDecoder(nn.Module):
 
 class Whisper(nn.Module):
     def __init__(
-        self, 
-        dims: ModelDimensions, 
-        dtype: mx.Dtype = mx.float16, 
+        self,
+        dims: ModelDimensions,
+        dtype: mx.Dtype = mx.float16,
     ):
         super().__init__()
         self.dims = dims
         self.max_source_positions = self.dims.max_source_positions
-        
+
         self.encoder = AudioEncoder(
             self.dims.n_mels,
             self.dims.n_audio_ctx,
@@ -279,7 +287,7 @@ class Whisper(nn.Module):
             dtype,
             max_source_positions=self.dims.max_source_positions,
         )
-        
+
         self.decoder = TextDecoder(
             self.dims.n_vocab,
             self.dims.n_text_ctx,

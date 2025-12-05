@@ -19,11 +19,25 @@ import shutil
 
 from huggingface_hub import snapshot_download
 from transformers import (
-    AutoProcessor, WhisperForConditionalGeneration, WhisperConfig, GenerationConfig
+    AutoProcessor,
+    WhisperForConditionalGeneration,
+    WhisperConfig,
+    GenerationConfig,
 )
-from transformers.models.whisper.generation_whisper import _dynamic_time_warping, _median_filter
-from transformers.modeling_outputs import BaseModelOutput, BaseModelOutputWithPastAndCrossAttentions
-from transformers.cache_utils import Cache, DynamicCache, EncoderDecoderCache, StaticCache
+from transformers.models.whisper.generation_whisper import (
+    _dynamic_time_warping,
+    _median_filter,
+)
+from transformers.modeling_outputs import (
+    BaseModelOutput,
+    BaseModelOutputWithPastAndCrossAttentions,
+)
+from transformers.cache_utils import (
+    Cache,
+    DynamicCache,
+    EncoderDecoderCache,
+    StaticCache,
+)
 
 from .mlx_modules import Whisper as MLXWhisper, TextDecoder as MLXTextDecoder
 from .mlx_modules import ModelDimensions
@@ -43,17 +57,17 @@ class BaseEncoder(torch.nn.Module):
         self.conv1 = AttributeContainer(stride=(1, 1))
         self.conv2 = AttributeContainer(stride=(2, 2))
         self.total_time_worked = 0
-        
+
     def convert_inputs(self, input_features, device):
         if isinstance(input_features, torch.Tensor):
             input_features = input_features.detach().cpu().numpy()
         return input_features
-    
+
     def convert_outputs(self, hidden_states, device):
         if isinstance(hidden_states, np.ndarray):
             hidden_states = torch.from_numpy(hidden_states).to(device)
         return hidden_states
-    
+
     def __call__(
         self,
         input_features,
@@ -64,7 +78,11 @@ class BaseEncoder(torch.nn.Module):
         return_dict=None,
     ):
         start_time = time.time()
-        device = input_features.device if isinstance(input_features, torch.Tensor) else input_features.device
+        device = (
+            input_features.device
+            if isinstance(input_features, torch.Tensor)
+            else input_features.device
+        )
         input_features = self.convert_inputs(input_features, device)
         hidden_states = self.forward(input_features)
         hidden_states = self.convert_outputs(hidden_states, device)
@@ -76,38 +94,39 @@ class BaseEncoder(torch.nn.Module):
             hidden_states=None,
             attentions=None,
         )
-    
+
     def forward(self, mel_features):
         raise NotImplementedError("Implement this method in the subclass")
 
 
 class ANEEncoder(BaseEncoder):
     def __init__(self, encoder_path: str):
-        if encoder_path.endswith('.mlmodelc'):
+        if encoder_path.endswith(".mlmodelc"):
             encoder = ct.models.CompiledMLModel(
                 encoder_path, compute_units=ct.ComputeUnit.CPU_AND_NE
             )
-        elif encoder_path.endswith('.mlpackage'):
+        elif encoder_path.endswith(".mlpackage"):
             encoder = ct.models.MLModel(
                 encoder_path, compute_units=ct.ComputeUnit.CPU_AND_NE
             )
         else:
             raise ValueError("Encoder format is not supported")
-        
+
         super().__init__(encoder)
 
     def forward(self, mel_features):
-        return self.encoder.predict({'logmel_data': mel_features})
+        return self.encoder.predict({"logmel_data": mel_features})
 
 
 class HFMLXEncoder(BaseEncoder):
     """Wrapper for MLX AudioEncoder to make it compatible with HF's WhisperEncoder interface"""
+
     def convert_inputs(self, input_features, device):
         input_features = input_features.transpose(1, 2)
         input_features = super().convert_inputs(input_features, device)
         input_features = mx.array(input_features, dtype=mx.float16)
         return input_features
-    
+
     def convert_outputs(self, hidden_states, device):
         hidden_states = super().convert_outputs(hidden_states, device)
         hidden_states = torch.from_numpy(np.array(hidden_states, copy=False)).to(device)
@@ -119,6 +138,7 @@ class HFMLXEncoder(BaseEncoder):
 
 class HFMLXDecoder(torch.nn.Module):
     """Wrapper for MLX TextDecoder to make it compatible with HF's WhisperDecoder interface"""
+
     def __init__(self, decoder):
         super().__init__()
         self.decoder = decoder
@@ -129,7 +149,7 @@ class HFMLXDecoder(torch.nn.Module):
         self.ln = decoder.ln
         self._mask = decoder._mask
         self.total_time_worked = 0
-    
+
     def _convert_hf_cache_to_mlx(self, past_key_values: EncoderDecoderCache):
         """Convert HuggingFace cache format to MLX format"""
         if past_key_values is None:
@@ -142,20 +162,36 @@ class HFMLXDecoder(torch.nn.Module):
         # Convert self attention cache if it exists
         if self_attn_cache is not None and len(self_attn_cache.key_cache) > 0:
             # Convert all keys and values in parallel
-            keys = [mx.array(self_attn_cache.key_cache[i].detach().numpy(), dtype=mx.float16) 
-                   for i in range(len(self.blocks))]
-            values = [mx.array(self_attn_cache.value_cache[i].detach().numpy(), dtype=mx.float16)
-                     for i in range(len(self.blocks))]
+            keys = [
+                mx.array(
+                    self_attn_cache.key_cache[i].detach().numpy(), dtype=mx.float16
+                )
+                for i in range(len(self.blocks))
+            ]
+            values = [
+                mx.array(
+                    self_attn_cache.value_cache[i].detach().numpy(), dtype=mx.float16
+                )
+                for i in range(len(self.blocks))
+            ]
             mlx_cache = [(k, v) for k, v in zip(keys, values)]
 
         # Convert cross attention cache if it exists
         if cross_attn_cache is not None and len(cross_attn_cache.key_cache) > 0:
             # Convert all keys and values in parallel
-            keys = [mx.array(cross_attn_cache.key_cache[i].detach().numpy(), dtype=mx.float16)
-                   for i in range(len(self.blocks))]
-            values = [mx.array(cross_attn_cache.value_cache[i].detach().numpy(), dtype=mx.float16)
-                     for i in range(len(self.blocks))]
-            
+            keys = [
+                mx.array(
+                    cross_attn_cache.key_cache[i].detach().numpy(), dtype=mx.float16
+                )
+                for i in range(len(self.blocks))
+            ]
+            values = [
+                mx.array(
+                    cross_attn_cache.value_cache[i].detach().numpy(), dtype=mx.float16
+                )
+                for i in range(len(self.blocks))
+            ]
+
             # Update mlx_cache with cross attention values
             for i in range(len(self.blocks)):
                 if mlx_cache[i] is None:
@@ -183,14 +219,22 @@ class HFMLXDecoder(torch.nn.Module):
                 if isinstance(layer_cache[0], tuple):
                     k, v = layer_cache[0]
                     if k is not None:
-                        self_key_cache[i] = torch.from_numpy(np.array(k, copy=False))#.to(device)
-                        self_value_cache[i] = torch.from_numpy(np.array(v, copy=False))#.to(device)
+                        self_key_cache[i] = torch.from_numpy(
+                            np.array(k, copy=False)
+                        )  # .to(device)
+                        self_value_cache[i] = torch.from_numpy(
+                            np.array(v, copy=False)
+                        )  # .to(device)
                 # Handle cross attention cache
                 if len(layer_cache) > 1 and layer_cache[1] is not None:
                     k, v = layer_cache[1]
                     if k is not None:
-                        cross_key_cache[i] = torch.from_numpy(np.array(k, copy=False))#.to(device)
-                        cross_value_cache[i] = torch.from_numpy(np.array(v, copy=False))#.to(device)
+                        cross_key_cache[i] = torch.from_numpy(
+                            np.array(k, copy=False)
+                        )  # .to(device)
+                        cross_value_cache[i] = torch.from_numpy(
+                            np.array(v, copy=False)
+                        )  # .to(device)
         # Create HF cache format
         self_attn_cache = DynamicCache()
         cross_attn_cache = DynamicCache()
@@ -212,7 +256,7 @@ class HFMLXDecoder(torch.nn.Module):
         """Convert MLX attention weights to PyTorch format"""
         if not qk or all(layer_qk is None for layer_qk in qk):
             return None, None
-        
+
         self_attentions = []
         cross_attentions = []
 
@@ -228,7 +272,9 @@ class HFMLXDecoder(torch.nn.Module):
 
                 # Convert and process self attention weights
                 if self_qk is not None:
-                    self_qk_torch = torch.from_numpy(np.array(self_qk, copy=False))#.to(device)
+                    self_qk_torch = torch.from_numpy(
+                        np.array(self_qk, copy=False)
+                    )  # .to(device)
                     # Don't apply softmax - HF expects raw attention logits
                     self_attentions.append(self_qk_torch)
                 else:
@@ -236,7 +282,9 @@ class HFMLXDecoder(torch.nn.Module):
 
                 # Convert and process cross attention weights
                 if cross_qk is not None:
-                    cross_qk_torch = torch.from_numpy(np.array(cross_qk, copy=False))#.to(device)
+                    cross_qk_torch = torch.from_numpy(
+                        np.array(cross_qk, copy=False)
+                    )  # .to(device)
                     # Don't apply softmax - HF expects raw attention logits
                     cross_attentions.append(cross_qk_torch)
                 else:
@@ -248,14 +296,14 @@ class HFMLXDecoder(torch.nn.Module):
         # Filter out None values and ensure proper shape for HF
         # self_attentions = [a for a in self_attentions if a is not None]
         # cross_attentions = [a for a in cross_attentions if a is not None]
-        
+
         # HF expects attention weights in format [batch_size, num_heads, seq_len, seq_len]
         # Ensure our tensors match this format
         if self_attentions:
             self_attentions = tuple(self_attentions)
         else:
             self_attentions = None
-            
+
         if cross_attentions:
             cross_attentions = tuple(cross_attentions)
         else:
@@ -280,14 +328,20 @@ class HFMLXDecoder(torch.nn.Module):
         cache_position=None,
     ):
         # Convert torch tensors to MLX arrays
-        device = input_ids.device if isinstance(input_ids, torch.Tensor) else encoder_hidden_states.device
+        device = (
+            input_ids.device
+            if isinstance(input_ids, torch.Tensor)
+            else encoder_hidden_states.device
+        )
 
         start_time = time.time()
 
         if isinstance(input_ids, torch.Tensor):
             input_ids = mx.array(input_ids.detach().cpu().numpy(), dtype=mx.int32)
         if isinstance(encoder_hidden_states, torch.Tensor):
-            encoder_hidden_states = mx.array(encoder_hidden_states.detach().cpu().numpy(), dtype=mx.float16)
+            encoder_hidden_states = mx.array(
+                encoder_hidden_states.detach().cpu().numpy(), dtype=mx.float16
+            )
         elif isinstance(encoder_hidden_states, np.ndarray):
             encoder_hidden_states = mx.array(encoder_hidden_states, dtype=mx.float16)
 
@@ -297,13 +351,13 @@ class HFMLXDecoder(torch.nn.Module):
             mlx_cache = self._convert_hf_cache_to_mlx(past_key_values)
         # Forward pass through MLX decoder
         hidden_states, kv_cache, qk = self.decoder(
-            input_ids, 
-            encoder_hidden_states, 
-            kv_cache=mlx_cache
+            input_ids, encoder_hidden_states, kv_cache=mlx_cache
         )
         # Convert MLX arrays to torch tensors
         if isinstance(hidden_states, mx.array):
-            hidden_states = torch.from_numpy(np.array(hidden_states, copy=False))#.to(device)
+            hidden_states = torch.from_numpy(
+                np.array(hidden_states, copy=False)
+            )  # .to(device)
         # Convert MLX cache to HF format if using cache
         if use_cache:
             kv_cache = self._convert_mlx_cache_to_hf(kv_cache, device)
@@ -312,7 +366,9 @@ class HFMLXDecoder(torch.nn.Module):
         # Convert attention weights if needed
         self_attentions, cross_attentions = None, None
         if output_attentions:
-            self_attentions, cross_attentions = self._convert_attention_weights(qk, device)
+            self_attentions, cross_attentions = self._convert_attention_weights(
+                qk, device
+            )
 
         self.total_time_worked += time.time() - start_time
 
@@ -358,14 +414,14 @@ def load_mlx_decoder(
         config = json.loads(f.read())
         config.pop("model_type", None)
         dec_quant_config = config.pop("decoder_quant_config", None)
-        config['max_source_positions'] = max_source_positions
+        config["max_source_positions"] = max_source_positions
 
     model_args = ModelDimensions(**config)
 
     wf = model_path / "weights.safetensors"
     if not wf.exists():
         wf = model_path / "weights.npz"
-    
+
     weights = mx.load(str(wf))
 
     model = MLXTextDecoder(
@@ -395,7 +451,7 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
         cls,
         pretrained_model_name_or_path: str,
         chunk_length: int = 10,
-        mode='S',
+        mode="S",
         *model_args,
         **kwargs,
     ):
@@ -427,7 +483,7 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
         _ = kwargs.pop("mode", None)  # optional user size hint, not used here
 
         max_source_positions = int(1500 * (chunk_length / 30))
-        
+
         enc_rel = kwargs.pop("encoder_path", None)
         dec_rel = kwargs.pop("decoder_path", None)
 
@@ -449,7 +505,9 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
             base_path = Path(snapshot_path)
 
         # Expected under: <root>/free/macos_15_ios_18/{mode}/{chunk_length}sec
-        platform_mode_path = base_path / "free" / "macos_15_ios_18" / str(mode) / f"{chunk_length}sec"
+        platform_mode_path = (
+            base_path / "free" / "macos_15_ios_18" / str(mode) / f"{chunk_length}sec"
+        )
         if not platform_mode_path.exists():
             raise FileNotFoundError(
                 f"Expected path '{platform_mode_path}' to exist (derived from '{pretrained_model_name_or_path}/free/macos_15_ios_18/{mode}')."
@@ -477,7 +535,9 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
 
         def _unzip_mlmodelc(zip_path: Path) -> Path:
             """Ensure a .mlmodelc.zip is extracted next to the archive and return the .mlmodelc dir."""
-            target_dir = zip_path.parent / zip_path.stem  # removes only .zip, leaves *.mlmodelc
+            target_dir = (
+                zip_path.parent / zip_path.stem
+            )  # removes only .zip, leaves *.mlmodelc
             if not target_dir.exists():
                 # Extract into parent directory to preserve inside structure
                 shutil.unpack_archive(str(zip_path), extract_dir=str(zip_path.parent))
@@ -487,7 +547,9 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
             fallback = next(zip_path.parent.glob("*.mlmodelc"), None)
             if fallback is not None:
                 return fallback
-            raise FileNotFoundError(f"Failed to locate extracted .mlmodelc directory for '{zip_path}'.")
+            raise FileNotFoundError(
+                f"Failed to locate extracted .mlmodelc directory for '{zip_path}'."
+            )
 
         def _find_decoder_path(root: Path) -> Path:
             if dec_rel is not None:
@@ -497,7 +559,9 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
             # Prefer a directory with config.json and weights
             for cfg in root.rglob("config.json"):
                 parent = cfg.parent
-                if (parent / "weights.safetensors").exists() or (parent / "weights.npz").exists():
+                if (parent / "weights.safetensors").exists() or (
+                    parent / "weights.npz"
+                ).exists():
                     return parent
             # Fallback to a decoder .pkl if present
             for pkl in root.rglob("*.pkl"):
@@ -505,7 +569,8 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
                     return pkl
             # As a last resort, if root looks like a decoder folder, use it
             if (root / "config.json").exists() and (
-                (root / "weights.safetensors").exists() or (root / "weights.npz").exists()
+                (root / "weights.safetensors").exists()
+                or (root / "weights.npz").exists()
             ):
                 return root
             raise FileNotFoundError(
@@ -523,7 +588,7 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
         model_skeleton_path = base_path / "hf_model.pkl"
         with open(str(model_skeleton_path), "rb") as f:
             model = pickle.load(f)
-        
+
         if gen_config is not None:
             model.generation_config = gen_config
 
@@ -534,11 +599,13 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
             with open(str(decoder_path), "rb") as f:
                 mlx_decoder = pickle.load(f)
         else:
-            mlx_decoder = load_mlx_decoder(str(decoder_path), max_source_positions=max_source_positions)
+            mlx_decoder = load_mlx_decoder(
+                str(decoder_path), max_source_positions=max_source_positions
+            )
         model.model.decoder = HFMLXDecoder(mlx_decoder)
 
         mlx_decoder.set_alignment_heads(model.generation_config.alignment_heads)
-        model.device_param = torch.nn.Parameter(torch.ones(1, device='cpu'))
+        model.device_param = torch.nn.Parameter(torch.ones(1, device="cpu"))
         model.proj_out = torch.nn.Identity()
 
         return model
@@ -567,13 +634,33 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
                 num_input_ids=decoder_input_ids.shape[-1],
             )
 
-        def split_by_batch_index(values, key, batch_idx, is_shortform, beam_indices=None):
+        def split_by_batch_index(
+            values, key, batch_idx, is_shortform, beam_indices=None
+        ):
             if beam_indices is not None and key == "scores":
-                return [v[beam_idx].cpu() for (v, beam_idx) in zip(values, beam_indices[batch_idx][: len(values)])]
-            if key in ["scores", "encoder_attentions", "encoder_hidden_states", "logits"]:
+                return [
+                    v[beam_idx].cpu()
+                    for (v, beam_idx) in zip(
+                        values, beam_indices[batch_idx][: len(values)]
+                    )
+                ]
+            if key in [
+                "scores",
+                "encoder_attentions",
+                "encoder_hidden_states",
+                "logits",
+            ]:
                 return [v[batch_idx].cpu() for v in values]
-            if key in ["decoder_attentions", "decoder_hidden_states", "cross_attentions"]:
-                return tuple(tuple(w[batch_idx][None].cpu() for w in v if w is not None) for v in values if v is not None)
+            if key in [
+                "decoder_attentions",
+                "decoder_hidden_states",
+                "cross_attentions",
+            ]:
+                return tuple(
+                    tuple(w[batch_idx][None].cpu() for w in v if w is not None)
+                    for v in values
+                    if v is not None
+                )
             elif key == "past_key_values":
                 if not is_shortform:
                     # we don't save `past_key_values` as this is too costly for longform
@@ -582,9 +669,14 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
                     all_past_key_values = []
                     for layer_idx in range(self.config.decoder_layers):
                         layer_past_key_values = []
-                        for cache_cls in [values.self_attention_cache, values.cross_attention_cache]:
+                        for cache_cls in [
+                            values.self_attention_cache,
+                            values.cross_attention_cache,
+                        ]:
                             for v in [cache_cls.key_cache, cache_cls.value_cache]:
-                                layer_past_key_values.append(v[layer_idx][batch_idx][None].cpu())
+                                layer_past_key_values.append(
+                                    v[layer_idx][batch_idx][None].cpu()
+                                )
                         all_past_key_values.append(tuple(layer_past_key_values))
                     return tuple(all_past_key_values)
                 else:
@@ -604,7 +696,9 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
         sequence_tokens = seek_outputs["sequences"][:, start_idx:]
         seek_outputs = [
             {
-                k: split_by_batch_index(v, k, i, is_shortform, beam_indices=seek_outputs.get("beam_indices"))
+                k: split_by_batch_index(
+                    v, k, i, is_shortform, beam_indices=seek_outputs.get("beam_indices")
+                )
                 for k, v in seek_outputs.items()
             }
             for i in range(sequence_tokens.shape[0])
@@ -613,7 +707,12 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
         return sequence_tokens, seek_outputs
 
     def _extract_token_timestamps(
-        self, generate_outputs, alignment_heads, time_precision=0.02, num_frames=None, num_input_ids=None
+        self,
+        generate_outputs,
+        alignment_heads,
+        time_precision=0.02,
+        num_frames=None,
+        num_input_ids=None,
     ):
         """
         Calculates token-level timestamps using the encoder-decoder cross-attentions and dynamic time-warping (DTW) to
@@ -632,7 +731,9 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
                 torch.cat([x[i] for x in generate_outputs.cross_attentions], dim=2)
             )
 
-        weights = torch.stack([cross_attentions[i][:, 0] for i in range(len(alignment_heads))]) # head_indices[i]
+        weights = torch.stack(
+            [cross_attentions[i][:, 0] for i in range(len(alignment_heads))]
+        )  # head_indices[i]
 
         weights = weights.permute([1, 0, 2, 3])
 
@@ -643,13 +744,21 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
             # since the beam search strategy chooses the most probable sequences at the end of the search.
             # In that case, the cross_attentions weights are too long and we have to make sure that they have the right output_length
             weight_length = (generate_outputs.beam_indices != -1).sum(-1).max()
-            weight_length = weight_length if num_input_ids is None else weight_length + num_input_ids
+            weight_length = (
+                weight_length
+                if num_input_ids is None
+                else weight_length + num_input_ids
+            )
 
             # beam search takes `decoder_input_ids` into account in the `beam_indices` length
             # but forgot to shift the beam_indices by the number of `decoder_input_ids`
-            beam_indices = torch.zeros_like(generate_outputs.beam_indices[:, :weight_length])
+            beam_indices = torch.zeros_like(
+                generate_outputs.beam_indices[:, :weight_length]
+            )
             # we actually shif the beam indices here
-            beam_indices[:, num_input_ids:] = generate_outputs.beam_indices[:, : weight_length - num_input_ids]
+            beam_indices[:, num_input_ids:] = generate_outputs.beam_indices[
+                :, : weight_length - num_input_ids
+            ]
 
             weights = weights[:, :, :weight_length]
 
@@ -660,7 +769,9 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
             # Select the cross attention from the right beam for each output sequences
             weights = torch.stack(
                 [
-                    torch.index_select(weights[:, :, i, :], dim=0, index=beam_indices[:, i])
+                    torch.index_select(
+                        weights[:, :, i, :], dim=0, index=beam_indices[:, i]
+                    )
                     for i in range(beam_indices.shape[1])
                 ],
                 dim=2,
@@ -670,7 +781,9 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
         input_length = weight_length or cross_attentions[0].shape[2]
         batch_size = generate_outputs.sequences.shape[0]
         timestamps = torch.zeros(
-            (batch_size, input_length + 1), dtype=torch.float32, device=generate_outputs.sequences.device
+            (batch_size, input_length + 1),
+            dtype=torch.float32,
+            device=generate_outputs.sequences.device,
         )
 
         if num_frames is not None:
@@ -682,16 +795,30 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
             if isinstance(num_frames, int):
                 weights = weights[..., : num_frames // 2]
 
-            elif isinstance(num_frames, (list, tuple, np.ndarray)) and len(np.unique(num_frames)) == 1:
+            elif (
+                isinstance(num_frames, (list, tuple, np.ndarray))
+                and len(np.unique(num_frames)) == 1
+            ):
                 weights = weights[..., : num_frames[0] // 2]
 
-            elif isinstance(num_frames, (torch.Tensor)) and len(torch.unique(num_frames)) == 1:
+            elif (
+                isinstance(num_frames, (torch.Tensor))
+                and len(torch.unique(num_frames)) == 1
+            ):
                 weights = weights[..., : num_frames[0] // 2]
 
             else:
                 # num_frames is of shape (batch_size,) whereas batch_size is truely batch_size*num_return_sequences
-                repeat_time = batch_size if isinstance(num_frames, int) else batch_size // len(num_frames)
-                num_frames = num_frames.cpu() if isinstance(num_frames, (torch.Tensor)) else num_frames
+                repeat_time = (
+                    batch_size
+                    if isinstance(num_frames, int)
+                    else batch_size // len(num_frames)
+                )
+                num_frames = (
+                    num_frames.cpu()
+                    if isinstance(num_frames, (torch.Tensor))
+                    else num_frames
+                )
                 num_frames = np.repeat(num_frames, repeat_time)
 
         if num_frames is None or isinstance(num_frames, int):
@@ -706,7 +833,9 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
 
         # Perform dynamic time warping on each element of the batch.
         for batch_idx in range(batch_size):
-            if num_frames is not None and isinstance(num_frames, (tuple, list, np.ndarray, torch.Tensor)):
+            if num_frames is not None and isinstance(
+                num_frames, (tuple, list, np.ndarray, torch.Tensor)
+            ):
                 matrix = weights[batch_idx, ..., : num_frames[batch_idx] // 2]
 
                 # Normalize and smoothen the weights.
@@ -720,8 +849,12 @@ class TheWhisperForConditionalGeneration(WhisperForConditionalGeneration):
             else:
                 matrix = weights[batch_idx]
 
-            text_indices, time_indices = _dynamic_time_warping(-matrix.cpu().double().numpy())
-            jumps = np.pad(np.diff(text_indices), (1, 0), constant_values=1).astype(bool)
+            text_indices, time_indices = _dynamic_time_warping(
+                -matrix.cpu().double().numpy()
+            )
+            jumps = np.pad(np.diff(text_indices), (1, 0), constant_values=1).astype(
+                bool
+            )
             jump_times = time_indices[jumps] * time_precision
             timestamps[batch_idx, 1:] = torch.tensor(jump_times)
 

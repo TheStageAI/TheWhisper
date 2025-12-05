@@ -1,6 +1,7 @@
 import transformers
 import numpy as np
 
+
 def _find_longest_common_sequence(sequences, token_timestamp_sequences=None):
     # It would be much harder to do O(n) because of fault tolerance.
     # We actually have a really good property which is that the total sequence
@@ -84,7 +85,10 @@ def _find_longest_common_sequence(sequences, token_timestamp_sequences=None):
                     for idx, elem in enumerate(left)
                     if (
                         elem == right[idx]
-                        and compare(left_token_timestamp_sequence[left_start + idx], token_timestamp_sequences[seq_idx + 1][right_start + idx])
+                        and compare(
+                            left_token_timestamp_sequence[left_start + idx],
+                            token_timestamp_sequences[seq_idx + 1][right_start + idx],
+                        )
                         # and left_token_timestamp_sequence[left_start + idx] <= token_timestamp_sequences[seq_idx + 1][right_start + idx]
                     )
                 )
@@ -111,8 +115,12 @@ def _find_longest_common_sequence(sequences, token_timestamp_sequences=None):
         left_length = len(left_sequence)
 
         if token_timestamp_sequences:
-            total_token_timestamp_sequence.extend(left_token_timestamp_sequence[:left_mid])
-            left_token_timestamp_sequence = token_timestamp_sequences[seq_idx + 1][right_mid:]
+            total_token_timestamp_sequence.extend(
+                left_token_timestamp_sequence[:left_mid]
+            )
+            left_token_timestamp_sequence = token_timestamp_sequences[seq_idx + 1][
+                right_mid:
+            ]
 
     total_sequence.extend(left_sequence)
 
@@ -126,4 +134,6 @@ def _find_longest_common_sequence(sequences, token_timestamp_sequences=None):
         return total_sequence, []
 
 
-transformers.models.whisper.tokenization_whisper._find_longest_common_sequence = _find_longest_common_sequence
+transformers.models.whisper.tokenization_whisper._find_longest_common_sequence = (
+    _find_longest_common_sequence
+)

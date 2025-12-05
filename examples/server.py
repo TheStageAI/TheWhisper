@@ -22,26 +22,30 @@ class StreamingManager:
         self.initialization_time = None
         self.model_status = "not_initialized"
         self.model_error = None
-    
+
     async def create_session(self, session_id: str) -> None:
         if self.model_status != "ready":
             if not self.init_streaming_backend():
                 if self.model_error:
-                    raise HTTPException(status_code=500, detail=f"Failed to initialize model: {self.model_error}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Failed to initialize model: {self.model_error}",
+                    )
                 else:
-                    raise HTTPException(status_code=401, detail="Invalid token or model initialization failed")
-        
-        self.active_sessions[session_id] = {'is_active': True}
+                    raise HTTPException(
+                        status_code=401,
+                        detail="Invalid token or model initialization failed",
+                    )
+
+        self.active_sessions[session_id] = {"is_active": True}
 
     def init_streaming_backend(self) -> bool:
         self.model_status = "initializing"
         self.model_error = None
         self.streaming_pipe = StreamingPipeline(
-            model='TheStageAI/thewhisper-large-v3-turbo',
+            model="TheStageAI/thewhisper-large-v3-turbo",
             chunk_length_s=15,
-            platform='apple',
-            agreement_history_size=5,
-            agreement_majority_threshold=2,
+            platform="apple",
         )
         print("Streaming backend initialized")
         return True
@@ -49,43 +53,49 @@ class StreamingManager:
     async def end_session(self, session_id: str) -> None:
         if session_id in self.active_sessions:
             session = self.active_sessions[session_id]
-            session['is_active'] = False
+            session["is_active"] = False
             del self.active_sessions[session_id]
             # self.streaming_pipe.clear()
-    
+
     async def add_audio_chunk(self, session_id: str, audio_data: np.ndarray) -> None:
         if session_id not in self.active_sessions:
-            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
-        
+            raise HTTPException(
+                status_code=404, detail=f"Session {session_id} not found"
+            )
+
         self.streaming_pipe.add_new_chunk(audio_data)
-    
+
     async def process_chunk(self, session_id: str) -> List[dict]:
         if session_id not in self.active_sessions:
-            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
-            
+            raise HTTPException(
+                status_code=404, detail=f"Session {session_id} not found"
+            )
+
         return self.streaming_pipe.process_new_chunk()
-    
+
     async def clear_session(self, session_id: str) -> None:
         if session_id not in self.active_sessions:
-            raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Session {session_id} not found"
+            )
         # self.streaming_pipe.clear()
-    
+
     def cleanup(self):
         """Cleanup resources before shutdown"""
         print("Cleaning up streaming manager resources...")
         # Clean up active sessions
         for session_id in list(self.active_sessions.keys()):
-            self.active_sessions[session_id]['is_active'] = False
+            self.active_sessions[session_id]["is_active"] = False
         self.active_sessions.clear()
         # if self.streaming_pipe:
-            # self.streaming_pipe.clear()
+        # self.streaming_pipe.clear()
 
 
 @app.post("/session/create/")
 async def create_session():
     """Create a new streaming session"""
     global streaming_manager
-    session_id = base64.urlsafe_b64encode(os.urandom(16)).decode('ascii')
+    session_id = base64.urlsafe_b64encode(os.urandom(16)).decode("ascii")
     await streaming_manager.create_session(session_id)
     return {"session_id": session_id}
 
@@ -139,6 +149,7 @@ app.add_middleware(
 
 server = None
 
+
 def signal_handler(sig, frame):
     """Handle termination signals"""
     print(f"Received signal {sig}, shutting down...")
@@ -154,23 +165,25 @@ def signal_handler(sig, frame):
 def main():
     global streaming_manager
     global server
-    
+
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-    
+
     with open("/tmp/asr_streaming_server.pid", "w") as f:
         f.write(str(os.getpid()))
-    
+
     import uvicorn
 
     host = os.getenv("ASR_STREAMING_HOST", "127.0.0.1")
     port = os.getenv("ASR_STREAMING_PORT", 8000)
-    
+
     streaming_manager = StreamingManager()
 
     print("Server started")
-    
-    config = uvicorn.Config(app, host=host, port=port, log_level="error", access_log=False)
+
+    config = uvicorn.Config(
+        app, host=host, port=port, log_level="error", access_log=False
+    )
     server = uvicorn.Server(config)
     server.run()
 
