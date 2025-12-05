@@ -68,6 +68,7 @@ class StreamingPipeline:
         self.chunk_length_s: float = chunk_length_s
         self.window_size: float = chunk_length_s - 2
         self.sample_rate: int = 16000
+        self.language: str = language
         
         special_tokens: str = f"<|startoftranscript|><|{language}|><|transcribe|>"
         self.encoded_special_tokens: torch.Tensor = self.asr_pipeline.tokenizer(
