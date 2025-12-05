@@ -108,8 +108,6 @@ class RemoteAPIBackend(TranscriptionBackend):
         buffer_start_time: float,
         sample_rate: int,
     ) -> List[Dict[str, Any]]:
-        # Prefix is currently ignored by the remote backend; context would be
-        # handled by the remote service itself if supported.
         wav_bytes = self._audio_to_wav_bytes(audio, sample_rate)
 
         files = {
@@ -262,8 +260,8 @@ class LocalWhisperBackend(TranscriptionBackend):
                     token['timestamp'] = (token['timestamp'][0], token['timestamp'][0] + max_word_duration)
             generated_tokens.append({
                 'text': token['text'],
-                'start': token['timestamp'][0] + self.buffer_start_time,
-                'end': token['timestamp'][1] + self.buffer_start_time
+                'start': token['timestamp'][0] + buffer_start_time,
+                'end': token['timestamp'][1] + buffer_start_time
             })
         
         return generated_tokens
@@ -504,18 +502,16 @@ class StreamingPipeline:
     def _run_transcription(
         self,
         audio: np.ndarray,
-        prefix_text: Optional[List[Dict[str, Any]]] = None,
     ) -> List[Dict[str, Any]]:
         """
-        Delegate to the backend and prepend prefix tokens so
-        LocalAgreement always sees (prefix + new) tokens.
+        Delegate to the backend.
         """
-        new_only_tokens = self.backend.transcribe(
+        new_tokens = self.backend.transcribe(
             audio=audio,
             buffer_start_time=self.buffer_start_time,
             sample_rate=self.sample_rate,
         )
-        return self._prefix_tokens + new_only_tokens
+        return new_tokens
 
     def clear(self) -> None:
         """
