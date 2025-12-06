@@ -283,6 +283,9 @@ class StreamingPipeline:
         model: str,
         model_size: str = "S",
         chunk_length_s: int = 10,
+        # Minimum accumulated audio (in seconds) before running processing.
+        # This is the target size for "big" chunks assembled from smaller ones.
+        min_process_chunk_s: float = 0.5,
         use_vad: bool = False,
         agreement_history_size: int = 5,
         agreement_majority_threshold: int = 3,
@@ -306,7 +309,12 @@ class StreamingPipeline:
     ):
         self.sample_rate: int = sample_rate
         self.chunk_length_s: float = chunk_length_s
+        self.min_process_chunk_s: float = min_process_chunk_s
         self.window_size: float = chunk_length_s - 2
+
+        # Internal buffer that accumulates small incoming chunks until
+        # at least `min_process_chunk_s` seconds of audio are available.
+        self._pending_chunk: Optional[np.ndarray] = None
 
         # Choose backend
         if backend is not None:
@@ -386,15 +394,46 @@ class StreamingPipeline:
         self.audio_queue: List[np.ndarray] = []
 
     def __call__(self, chunk: np.ndarray) -> List[Dict[str, Any]]:
-        """ """
+        """
+        Main streaming entry point.
+
+        Accepts small audio chunks (e.g. 0.05s), internally accumulates them
+        until at least `min_process_chunk_s` seconds are available, and only
+        then runs the backend processing.
+
+        If not enough audio has been accumulated yet, returns empty
+        transcriptions: ([], []).
+        """
         self.add_new_chunk(chunk)
         return self.process_new_chunk()
 
     def add_new_chunk(self, chunk: np.ndarray) -> None:
         """
-        Add a new audio chunk to the processing queue.
+        Add a new *small* audio chunk to the internal accumulator.
+
+        Small chunks are first accumulated in `_pending_chunk`. Once the
+        accumulated duration reaches at least `min_process_chunk_s` seconds,
+        the combined audio is pushed into `audio_queue` as a single larger
+        chunk for downstream processing.
         """
-        self.audio_queue.append(chunk)
+        if chunk is None or len(chunk) == 0:
+            return
+
+        # Accumulate into pending buffer
+        if self._pending_chunk is None:
+            self._pending_chunk = chunk
+        else:
+            self._pending_chunk = np.concatenate([self._pending_chunk, chunk])
+
+        pending_duration = len(self._pending_chunk) / self.sample_rate
+
+        # If we have not yet reached the minimum processing window, do nothing.
+        if pending_duration < self.min_process_chunk_s:
+            return
+
+        # Enough audio accumulated: push to main queue as one "big" chunk.
+        self.audio_queue.append(self._pending_chunk)
+        self._pending_chunk = None
 
     def process_new_chunk(self) -> List[Dict[str, Any]]:
         """
@@ -518,6 +557,7 @@ class StreamingPipeline:
         Reset the pipeline to its initial state.
         """
         self.current_audio_buffer = None
+        self._pending_chunk = None
         self.buffer_start_time = 0.0
         self.current_time = 0.0
         self.audio_queue = []
