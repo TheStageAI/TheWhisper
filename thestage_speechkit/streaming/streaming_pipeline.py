@@ -563,3 +563,4 @@ class StreamingPipeline:
         self.audio_queue = []
         self.no_speech_streak = 0
         self.speech_threshold = 0.5
+        self.local_agreement.clear()
