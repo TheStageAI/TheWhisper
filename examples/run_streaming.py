@@ -42,8 +42,6 @@ streaming_model = StreamingPipeline(
     platform='apple',
     language='en',
     min_process_chunk_s=args.process_window,
-    agreement_history_size=5,
-    agreement_majority_threshold=2,
 )
 
 if args.use_mic:
