@@ -33,7 +33,10 @@ const appState = {
 };
 
 const SAMPLE_RATE = 16000;
-const BUFFER_SIZE = 8192;
+// Duration (in seconds) of each small audio chunk sent to the backend.
+// At 16 kHz, 0.05 s ≈ 800 samples.
+const CHUNK_DURATION_S = 0.05;
+const BUFFER_SIZE = Math.round(SAMPLE_RATE * CHUNK_DURATION_S);
 const FRAME_SIZE_ANALYSER = 512;
 const STEP_SIZE_SEND_CHUNK = 500;
 const MIN_PROCESS_INTERVAL = 100;

@@ -11,6 +11,18 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--use-mic", action="store_true")
+parser.add_argument(
+    "--step-size",
+    type=float,
+    default=0.05,
+    help="Size of small audio chunks in seconds fed into the streaming pipeline",
+)
+parser.add_argument(
+    "--process-window",
+    type=float,
+    default=0.5,
+    help="Minimum accumulated audio (in seconds) before running ASR processing",
+)
 args = parser.parse_args()
 
 # Silence Transformers logs
@@ -29,14 +41,13 @@ streaming_model = StreamingPipeline(
     chunk_length_s=10,
     platform='apple',
     language='en',
-    agreement_history_size=5,
-    agreement_majority_threshold=2,
+    min_process_chunk_s=args.process_window,
 )
 
 if args.use_mic:
-    audio_stream = MicStream()
+    audio_stream = MicStream(step_size_s=args.step_size)
 else:
-    audio_stream = FileStream("example_speech.wav")
+    audio_stream = FileStream("example_speech.wav", step_size_s=args.step_size)
 
 output_stream = StdoutStream()
 

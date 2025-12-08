@@ -44,7 +44,8 @@ class StreamingManager:
         self.model_error = None
         self.streaming_pipe = StreamingPipeline(
             model="TheStageAI/thewhisper-large-v3-turbo",
-            chunk_length_s=15,
+            chunk_length_s=10,
+            min_process_chunk_s=0.5,
             platform="apple",
         )
         print("Streaming backend initialized")

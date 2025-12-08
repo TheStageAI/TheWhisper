@@ -189,6 +189,9 @@ class StdoutStream:
         assumption = [token["text"].strip() for token in assumption]
         self.approved_words.extend(approved)
 
+        if not assumption and not approved:
+            return
+
         new_committed_str = " ".join(self.approved_words)
         new_uncommitted_str = " ".join(assumption)
 
