@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import os
-import time
 import zlib
 import io
 import wave
@@ -157,54 +156,16 @@ class RemoteAPIBackend(TranscriptionBackend):
             return " ".join(seg.get("text", "") for seg in data["segments"])
         return ""
 
-    def _approximate_word_tokens(
-        self,
-        text: str,
-        audio_duration: float,
-        buffer_start_time: float,
-    ) -> List[Dict[str, Any]]:
-        """Create tokens with approximate timestamps when real timestamps unavailable."""
-        words = text.strip().split()
-        if not words or audio_duration <= 0:
-            return []
-
-        num_words = len(words)
-        per_word = audio_duration / num_words
-
-        tokens: List[Dict[str, Any]] = []
-        for i, w in enumerate(words):
-            rel_start = i * per_word
-            rel_end = (i + 1) * per_word
-            duration = min(rel_end - rel_start, self.MAX_WORD_DURATION)
-
-            token_start = buffer_start_time + rel_start
-            token_end = token_start + duration
-
-            tokens.append({
-                "text": w + (" " if i < num_words - 1 else ""),
-                "start": token_start,
-                "end": token_end,
-            })
-
-        return tokens
-
     def transcribe(
         self,
         audio: np.ndarray,
         buffer_start_time: float,
         sample_rate: int,
     ) -> List[Dict[str, Any]]:
-        data = self._send_request(audio, sample_rate)
-        text = self._parse_response(data) or ""
-
-        if not text.strip():
-            return []
-
-        if _compression_ratio(text) > self.GIBBERISH_THRESHOLD:
-            return []
-
-        audio_duration: float = len(audio) / sample_rate
-        return self._approximate_word_tokens(text, audio_duration, buffer_start_time)
+        """Base class requires subclass implementation with real timestamps."""
+        raise NotImplementedError(
+            "Use RemoteAPITimestampsBackend for real word-level timestamps"
+        )
 
     @classmethod
     def from_env(
@@ -352,13 +313,14 @@ class RemoteAPITimestampsBackend(RemoteAPIBackend):
         buffer_start_time: float,
         sample_rate: int,
     ) -> List[Dict[str, Any]]:
+        """Transcribe audio using real word-level timestamps from server."""
         data = self._send_request(audio, sample_rate)
 
         audio_duration: float = len(audio) / sample_rate
         if audio_duration <= 0:
             return []
 
-        # ---- 1) Prefer metadata.chunks with real timestamps ----
+        # Extract metadata.chunks with real timestamps
         raw_metadata = data.get("metadata")
         metadata = self._parse_metadata_any(raw_metadata)
 
@@ -366,24 +328,17 @@ class RemoteAPITimestampsBackend(RemoteAPIBackend):
         if isinstance(metadata, dict):
             chunks = metadata.get("chunks")
 
-        if isinstance(chunks, list) and chunks:
-            text_from_chunks = " ".join(
-                str(c.get("text", "")).strip() for c in chunks
-            )
-            if text_from_chunks and _compression_ratio(text_from_chunks) > self.GIBBERISH_THRESHOLD:
-                return []
-
-            return self._parse_chunks_to_tokens(chunks, audio_duration, buffer_start_time)
-
-        # ---- 2) Fallback: approximate per word from plain text ----
-        text = self._parse_response(data) or ""
-        if not text.strip():
+        if not isinstance(chunks, list) or not chunks:
+            logger.warning("No real timestamps in server response")
             return []
 
-        if _compression_ratio(text) > self.GIBBERISH_THRESHOLD:
+        text_from_chunks = " ".join(
+            str(c.get("text", "")).strip() for c in chunks
+        )
+        if text_from_chunks and _compression_ratio(text_from_chunks) > self.GIBBERISH_THRESHOLD:
             return []
 
-        return self._approximate_word_tokens(text, audio_duration, buffer_start_time)
+        return self._parse_chunks_to_tokens(chunks, audio_duration, buffer_start_time)
 
 
 class LocalWhisperBackend(TranscriptionBackend):
@@ -595,7 +550,7 @@ class StreamingPipeline:
             return backend
 
         if use_remote_api:
-            return RemoteAPIBackend.from_env(
+            return RemoteAPITimestampsBackend.from_env(
                 api_url=api_url,
                 api_auth_token=api_auth_token,
                 api_model_name=api_model_name,
@@ -716,8 +671,6 @@ class StreamingPipeline:
         committed_now = self.local_agreement.get_last_commited_words()
         # Optional unstable tail that is not yet committed
         unstable_tail = self.local_agreement.not_committed_words
-
-        # time.sleep(0.5)
 
         return committed_now, unstable_tail
 
