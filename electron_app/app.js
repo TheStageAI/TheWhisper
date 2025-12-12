@@ -57,7 +57,13 @@ let processingLoopActive = false;
 
 /////////////////////////////////////// API SERVER ////////////////////////////////////////////////
 const api = {
-  BASE_URL: 'http://localhost:8000',
+  BASE_URL: null,
+
+  async init() {
+    const config = await window.electronAPI.getConfig();
+    this.BASE_URL = config.baseUrl;
+    window.electronAPI.log.info('API initialized with BASE_URL:', this.BASE_URL);
+  },
 
   // SESSION CREATE
   async createSession() {
@@ -472,6 +478,7 @@ function showErrorModal(message) {
 /////////////////////////////////////// INITIALIZATION APP ////////////////////////////////////////
 async function initializeApp() {
   preloaderOpen();
+  await api.init();
   const initialized = await api.createSession();
   if (!initialized) {
     window.electronAPI.log.error('Failed to initialize application');
