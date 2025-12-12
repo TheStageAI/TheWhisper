@@ -8,6 +8,9 @@ const LOCAL_BACKEND_URL = process.env.LOCAL_BACKEND_URL || 'http://localhost:880
 const REMOTE_BACKEND_URL = process.env.REMOTE_BACKEND_URL || 'https://api.thestage.ai';
 const BASE_URL = BACKEND_MODE === 'remote' ? REMOTE_BACKEND_URL : LOCAL_BACKEND_URL;
 
+// ASR Backend Type: "apple" (local MLX) or "whisper" (remote Triton API)
+const ASR_BACKEND_TYPE = process.env.ASR_BACKEND_TYPE || 'apple';
+
 const log = require('electron-log');
 log.transports.file.level = false; // Logs off
 log.transports.file.resolvePath = () =>
@@ -73,7 +76,10 @@ ipcMain.on('app-quit', () => {
 });
 
 ipcMain.handle('get-config', () => {
-  return { baseUrl: BASE_URL };
+  return {
+    baseUrl: BASE_URL,
+    asrBackendType: ASR_BACKEND_TYPE,
+  };
 });
 
 ipcMain.on('log-info', (event, ...args) => {

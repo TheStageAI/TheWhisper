@@ -58,11 +58,15 @@ let processingLoopActive = false;
 /////////////////////////////////////// API SERVER ////////////////////////////////////////////////
 const api = {
   BASE_URL: null,
+  asrBackendType: null,
 
   async init() {
     const config = await window.electronAPI.getConfig();
     this.BASE_URL = config.baseUrl;
+    this.asrBackendType = config.asrBackendType || 'apple';
     window.electronAPI.log.info('API initialized with BASE_URL:', this.BASE_URL);
+    window.electronAPI.log.info('ASR Backend Type:', this.asrBackendType);
+    updateBackendIndicator(this.asrBackendType);
   },
 
   // SESSION CREATE
@@ -473,6 +477,14 @@ function showErrorModal(message) {
   const text = modal.querySelector('.text-error-caption');
   text.textContent = message;
   modal.classList.add('error-wrapper_open');
+}
+
+function updateBackendIndicator(backendType) {
+  const backendValue = document.getElementById('backendValue');
+  if (!backendValue) return;
+
+  backendValue.textContent = backendType === 'whisper' ? 'Whisper' : 'Apple MLX';
+  backendValue.className = 'backend-value ' + (backendType === 'whisper' ? 'whisper' : 'apple');
 }
 
 /////////////////////////////////////// INITIALIZATION APP ////////////////////////////////////////

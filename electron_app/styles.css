@@ -268,8 +268,42 @@ h1 {
   line-height: 100%;
   letter-spacing: -0.08em;
   margin: 0;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   animation: slideDown 0.8s ease-out forwards;
+}
+
+.backend-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-family: Inter;
+  font-size: 14px;
+  animation: slideDown 0.9s ease-out forwards;
+}
+
+.backend-label {
+  color: rgba(12, 12, 12, 0.5);
+  font-weight: 400;
+}
+
+.backend-value {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.backend-value.apple {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.backend-value.whisper {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
 }
 
 .granola__component {
