@@ -1,5 +1,9 @@
 from fastapi import FastAPI, WebSocket, UploadFile, File, HTTPException, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+# Load .env from project root
+load_dotenv()
 
 import numpy as np
 import soundfile as sf

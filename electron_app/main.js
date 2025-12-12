@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const isDev = process.env.NODE_ENV === 'development';
 
 const BACKEND_MODE = process.env.BACKEND_MODE || 'local';
