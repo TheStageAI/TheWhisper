@@ -94,7 +94,7 @@ thestage config set --api-token <YOUR_API_TOKEN>
 
 | **Feature** | **whisper-large-v3 (Nvidia)** | **whisper-large-v3 (Apple)** | **whisper-large-v3-turbo (Nvidia)** | **whisper-large-v3-turbo (Apple)** |
 | --- | --- | --- | --- | --- |
-| Streaming | ❌ | ✅ | ❌ | ✅ |
+| Streaming | ✅ | ✅ | ✅ | ✅ |
 | Accelerated | ✅ | ✅ | ✅ | ✅ |
 | Word Timestamps | ✅ | ✅ | ✅ | ✅ |
 | Multilingual | ✅ | ✅ | ✅ | ✅ |
@@ -105,7 +105,7 @@ thestage config set --api-token <YOUR_API_TOKEN>
 
 ### Nvidia GPU Requirements
 
-- **Supported GPUs:** RTX 4090, RTX 5090, L40s, H100
+- **Supported GPUs:** RTX 4090, RTX 5090, L40s, H100, Jetson-Thor
 - **Operating System:** Ubuntu 20.04+
 - **Minimum RAM:** 2.5 GB (5 GB recommended for large-v3 model)
 - **CUDA Version:** 11.8 or higher
@@ -304,11 +304,11 @@ To get commercial license for bigger number of GPUs to use TheStage AI optimized
 
 ✅ Time-stamp support on Nvidia
 
-☐ Nvidia Jetson support
-
-☐ Ready-to-go containers for inference on Nvidia GPUs with OpenAI compatible API
+✅ Nvidia Jetson support
 
 ☐ Streaming containers for Nvidia
+
+☐ Ready-to-go containers for inference on Nvidia GPUs with OpenAI compatible API
 
 ☐ Speaker diarization and speaker identification
 
