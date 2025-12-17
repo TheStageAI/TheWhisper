@@ -185,15 +185,15 @@ class StdoutStream:
         self.approved_words = []
 
     def write(self, approved: list[str], assumption: list[str]):
-        approved = [token["text"].strip() for token in approved]
-        assumption = [token["text"].strip() for token in assumption]
+        approved = [token["text"] for token in approved]
+        assumption = [token["text"] for token in assumption]
         self.approved_words.extend(approved)
 
         if not assumption and not approved:
             return
 
-        new_committed_str = " ".join(self.approved_words)
-        new_uncommitted_str = " ".join(assumption)
+        new_committed_str = "".join(self.approved_words)
+        new_uncommitted_str = "".join(assumption)
 
         if self.prev_uncommitted_str:
             sys.stdout.write("\b" * len(self.prev_uncommitted_str))
@@ -208,14 +208,9 @@ class StdoutStream:
 
         self.committed_str = new_committed_str
 
-        if new_uncommitted_str and self.committed_str:
-            prefix = " "
-        else:
-            prefix = ""
-
         if new_uncommitted_str:
-            sys.stdout.write(prefix + new_uncommitted_str)
-            self.prev_uncommitted_str = prefix + new_uncommitted_str
+            sys.stdout.write(new_uncommitted_str)
+            self.prev_uncommitted_str = new_uncommitted_str
         else:
             self.prev_uncommitted_str = ""
 
