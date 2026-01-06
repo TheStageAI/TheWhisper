@@ -220,7 +220,7 @@ model = ASRPipeline(
     # allowed: 10s, 15s, 20s, 30s
     chunk_length_s=10,
     # optimized TheStage AI engines
-    mode='S',
+    model_size='S',
     batch_size=32,
     device='cuda'
 )
