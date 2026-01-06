@@ -159,8 +159,7 @@ print(result["text"])
 ### Apple Usage with Streaming
 
 ```python
-from thestage_speechkit.apple import StreamingPipeline
-from thestage_speechkit.streaming import MicStream, FileStream, StdoutStream
+from thestage_speechkit.streaming import StreamingPipeline, MicStream, FileStream, StdoutStream
 
 streaming_pipe = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
