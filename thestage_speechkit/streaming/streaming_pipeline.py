@@ -11,35 +11,15 @@ from typing import List, Dict, Optional, Any, Tuple
 import numpy as np
 import httpx
 
-try:
-    import torch  # type: ignore
+import torch
+torch.set_grad_enabled(False)
 
-    TORCH_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    torch = None  # type: ignore
-    TORCH_AVAILABLE = False
-
-try:
-    from transformers import SequenceFeatureExtractor, PreTrainedTokenizer  # type: ignore
-    from transformers.utils import logging as hf_logging  # type: ignore
-
-    TRANSFORMERS_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    SequenceFeatureExtractor = PreTrainedTokenizer = None  # type: ignore
-    hf_logging = None  # type: ignore
-    TRANSFORMERS_AVAILABLE = False
-
-from .local_agreement import LocalAgreement
+from transformers import SequenceFeatureExtractor, PreTrainedTokenizer
+from transformers.utils import logging as hf_logging
 
 logger = logging.getLogger(__name__)
 
-if TRANSFORMERS_AVAILABLE and hf_logging is not None:
-    hf_logging.set_verbosity_error()  # type: ignore[attr-defined]
-
-LOG_LEVEL = os.getenv("LOG_LEVEL", "info")
-
-if TORCH_AVAILABLE and torch is not None:
-    torch.set_grad_enabled(False)  # type: ignore[call-arg]
+hf_logging.set_verbosity_error()
 
 
 def _compression_ratio(text: str) -> float:
@@ -357,14 +337,6 @@ class LocalWhisperBackend(TranscriptionBackend):
         feature_extractor: Optional["SequenceFeatureExtractor"] = None,
         tokenizer: Optional["PreTrainedTokenizer"] = None,
     ):
-        if not TORCH_AVAILABLE or torch is None:
-            raise ImportError(
-                "LocalWhisperBackend requires PyTorch (`torch`) to be installed."
-            )
-        if not TRANSFORMERS_AVAILABLE:
-            raise ImportError(
-                "LocalWhisperBackend requires `transformers` to be installed."
-            )
 
         if platform == "apple":
             from ..apple import ASRPipeline
@@ -381,7 +353,7 @@ class LocalWhisperBackend(TranscriptionBackend):
             torch_dtype = torch.float16  # type: ignore[union-attr]
 
         self.chunk_length_s: float = chunk_length_s
-        self.window_size: float = chunk_length_s - 2
+        self.window_size: float = chunk_length_s # - 2
         self.sample_rate: int = 16000
         self.device: str = device
         self.language: str = language
@@ -408,7 +380,7 @@ class LocalWhisperBackend(TranscriptionBackend):
         sample_rate: int,
     ) -> List[Dict[str, Any]]:
         audio_duration: float = len(audio) / sample_rate
-        max_new_tokens = 64
+        max_new_tokens = 128
 
         generate_kwargs: Dict[str, Any] = {
             "use_cache": True,
@@ -459,7 +431,7 @@ class LocalWhisperBackend(TranscriptionBackend):
 class StreamingPipeline:
     """
     High-level streaming wrapper around a TranscriptionBackend.
-    Maintains buffers, (optional) VAD, and local agreement logic.
+    Maintains buffers, and postprocesses transcribtions.
     """
 
     def __init__(
@@ -468,9 +440,6 @@ class StreamingPipeline:
         model_size: str = "S",
         chunk_length_s: int = 10,
         min_process_chunk_s: float = 0.5,
-        use_vad: bool = False,
-        agreement_history_size: int = 5,
-        agreement_majority_threshold: int = 3,
         platform: str = "apple",
         torch_dtype: "torch.dtype | None" = None,
         language: str = "en",
@@ -489,7 +458,7 @@ class StreamingPipeline:
         self.sample_rate: int = sample_rate
         self.chunk_length_s: float = chunk_length_s
         self.min_process_chunk_s: float = min_process_chunk_s
-        self.window_size: float = chunk_length_s - 2
+        self.window_size: float = chunk_length_s # - 2
         self._pending_chunk: Optional[np.ndarray] = None
 
         # Choose backend via factory or use injected one
@@ -514,17 +483,13 @@ class StreamingPipeline:
 
         self.no_speech_streak: int = 0
         self.speech_threshold: float = 0.5
-        self.vad_model = self._init_vad(use_vad)
-
-        self.local_agreement = LocalAgreement(
-            history_size=agreement_history_size,
-            majority_threshold=agreement_majority_threshold,
-        )
 
         self.current_audio_buffer: Optional[np.ndarray] = None
         self.buffer_start_time: float = 0.0
         self.current_time: float = 0.0
         self.audio_queue: List[np.ndarray] = []
+
+        self.history: List[List[Dict[str, Any]]] = []
 
     @staticmethod
     def _resolve_backend(
@@ -572,21 +537,6 @@ class StreamingPipeline:
             feature_extractor=feature_extractor,
             tokenizer=tokenizer,
         )
-
-    @staticmethod
-    def _init_vad(use_vad: bool) -> Any:
-        """Initialize VAD model if requested."""
-        if not use_vad:
-            return None
-
-        if not TORCH_AVAILABLE or torch is None:
-            raise ImportError(
-                "VAD is enabled but PyTorch (`torch`) is not installed."
-            )
-        model, _ = torch.hub.load(
-            repo_or_dir="snakers4/silero-vad", model="silero_vad"
-        )
-        return model
 
     def __call__(
         self, chunk: np.ndarray
@@ -657,85 +607,111 @@ class StreamingPipeline:
                 [self.current_audio_buffer, chunk]
             )
 
-        # Ensure the buffer does not grow unbounded
-        if len(self.current_audio_buffer) > self.window_size * self.sample_rate:
-            self._trim_audio_buffer()
-
         # Run transcription on the current buffer
         new_words = self._run_transcription(self.current_audio_buffer)
+        new_words = self._postprocess_transcribtions(new_words)
 
-        # Update local agreement with the new transcription
-        self.local_agreement.add_transcription(new_words)
+        # update history
+        self.history.append(new_words)
 
-        # Words that have just become "final" since the last call
-        committed_now = self.local_agreement.get_last_commited_words()
-        # Optional unstable tail that is not yet committed
-        unstable_tail = self.local_agreement.not_committed_words
-
-        return committed_now, unstable_tail
-
-    def _trim_audio_buffer(self) -> None:
-        """
-        Trim the audio buffer to keep at most `self.window_size` seconds,
-        preferably cutting at the end of a committed word to avoid
-        chopping words that may still change in future transcriptions.
-        """
-        if self.current_audio_buffer is None or len(self.current_audio_buffer) == 0:
-            return
-
-        max_seconds: float = self.window_size
-
-        committed = (
-            self.local_agreement.get_committed_words()
-        )  # or get_last_commited_words() ?
-
-        # If we have no committed words yet, fall back to a simple tail crop.
-        if not committed:
-            self.current_audio_buffer = self.current_audio_buffer[
-                -int(max_seconds * self.sample_rate) :
-            ]
-            self.buffer_start_time = (
-                self.current_time - len(self.current_audio_buffer) / self.sample_rate
-            )
-            return
-
-        # Earliest time we would like to keep in the buffer
-        target_start_time: float = 1.0 + self.current_time - max_seconds
-
-        # Find the last committed word that ends before or at target_start_time
-        cut_word = None
-        for w in committed:
-            if w["end"] <= target_start_time:
-                cut_word = w
-            else:
-                break
-
-        if cut_word is not None:
-            # Cut buffer at the end of this committed word
-            new_buffer_start_time: float = cut_word["end"]
-            delta_sec: float = new_buffer_start_time - self.buffer_start_time
-            if delta_sec > 0:
-                delta_samples: int = int(delta_sec * self.sample_rate)
-                self.current_audio_buffer = self.current_audio_buffer[delta_samples:]
-                self.buffer_start_time = new_buffer_start_time
-            else:
-                # If for some numerical reason delta_sec is not positive,
-                # fall back to a simple tail crop.
-                self.current_audio_buffer = self.current_audio_buffer[
-                    -int(max_seconds * self.sample_rate) :
-                ]
-                self.buffer_start_time = (
-                    self.current_time
-                    - len(self.current_audio_buffer) / self.sample_rate
-                )
+        # Ensure the buffer does not grow unbounded
+        max_allowed_size = (self.window_size - self.min_process_chunk_s) * self.sample_rate
+        if len(self.current_audio_buffer) > max_allowed_size:
+            final_text = self._extract_final_text()
+            truncation_time = self._get_truncation_time(final_text)
+            self._trim_audio_buffer(truncation_time)
+            commited_words = [word for word in final_text if word['end'] <= truncation_time]
+            uncommited_words = [word for word in new_words if word['end'] > truncation_time]
+            self.history = []
         else:
-            # No committed word early enough: simple tail crop
-            self.current_audio_buffer = self.current_audio_buffer[
-                -int(max_seconds * self.sample_rate) :
-            ]
-            self.buffer_start_time = (
-                self.current_time - len(self.current_audio_buffer) / self.sample_rate
-            )
+            commited_words = []
+            uncommited_words = new_words
+
+        return commited_words, uncommited_words
+
+    def _postprocess_transcribtions(self, tokens: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        # Fuse tokens that are only spaces and dots into the previous token
+        filtered_tokens = []
+        for i, token in enumerate(tokens):
+            text = token["text"]
+            # Check if token contains only spaces and dots
+            if text.strip() and all(c in (' ', '.') for c in text):
+                # If there's a previous token, append the dot to it
+                if filtered_tokens:
+                    filtered_tokens[-1]["text"] += text.strip()
+                    # Extend the end time of the previous token
+                    # filtered_tokens[-1]["end"] = token["end"]
+                # Skip adding this token to filtered_tokens
+            else:
+                filtered_tokens.append(token)
+        
+        # Add space to tokens that don't start with a space
+        for token in filtered_tokens:
+            if token["text"] and not token["text"].startswith(" "):
+                token["text"] = " " + token["text"]
+        
+        for token in filtered_tokens:
+            token['text'] = token['text'].replace('gonNA', 'gonna')
+            token['text'] = token['text'].replace('gotTA', 'gotta')
+            token['text'] = token['text'].replace('wanNA', 'wanna')
+
+        if len(filtered_tokens) == 1 and filtered_tokens[0]['text'].strip() in ['The.', 'The']:
+            filtered_tokens = []
+
+        return filtered_tokens
+
+    def _extract_final_text(self):
+        return self.history[-1]
+
+    def _get_truncation_time(self, final_words):
+        last_end_of_sentence_index = None
+        last_comma_index = None
+        max_pause_index = None
+        
+        max_pause_duration = 0.0
+        prev_word_end = 0.0
+        last_word = len(final_words) - 1
+
+        for i, word in enumerate(final_words):
+            text = word['text'].strip()
+            if (text.endswith('.') or text.endswith('?') or text.endswith('!')) and i != last_word:
+                last_end_of_sentence_index = i
+            
+            if (text.endswith(',') or text.endswith(';') or text.endswith(':')) and i != last_word:
+                last_comma_index = i
+            
+            if word['start'] - prev_word_end >= max_pause_duration:
+                max_pause_duration = word['start'] - prev_word_end
+                max_pause_index = i - 1
+            
+            prev_word_end = word['end']
+        
+        if last_end_of_sentence_index:
+            out = final_words[last_end_of_sentence_index]['end']
+        
+        elif last_comma_index:
+            out = final_words[last_comma_index]['end']
+        
+        elif max_pause_index is not None and max_pause_index >= 0:
+            out = final_words[max_pause_index]['end']
+        
+        elif len(final_words) >= 2:
+            out = final_words[-2]['end']
+        
+        elif len(final_words) == 1:
+            out = final_words[0]['end']
+        
+        else:
+            out = self.current_time - self.min_process_chunk_s * 2
+
+        return out
+
+    def _trim_audio_buffer(self, truncation_time: float) -> None:
+        delta = truncation_time - self.buffer_start_time
+        if delta > 0:
+            delta_samples = int(delta * self.sample_rate)
+            self.current_audio_buffer = self.current_audio_buffer[delta_samples:]
+            self.buffer_start_time = truncation_time
 
     def _run_transcription(
         self,
@@ -762,4 +738,3 @@ class StreamingPipeline:
         self.audio_queue = []
         self.no_speech_streak = 0
         self.speech_threshold = 0.5
-        self.local_agreement.clear()
