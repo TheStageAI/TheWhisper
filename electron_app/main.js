@@ -1,6 +1,15 @@
 const { app, BrowserWindow, ipcMain, Menu } = require('electron');
 const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 const isDev = process.env.NODE_ENV === 'development';
+
+const BACKEND_MODE = process.env.BACKEND_MODE || 'local';
+const LOCAL_BACKEND_URL = process.env.LOCAL_BACKEND_URL || 'http://localhost:8800';
+const REMOTE_BACKEND_URL = process.env.REMOTE_BACKEND_URL || 'https://api.thestage.ai';
+const BASE_URL = BACKEND_MODE === 'remote' ? REMOTE_BACKEND_URL : LOCAL_BACKEND_URL;
+
+// ASR Backend Type: "apple" (local MLX) or "whisper" (remote Triton API)
+const ASR_BACKEND_TYPE = process.env.ASR_BACKEND_TYPE || 'apple';
 
 const log = require('electron-log');
 log.transports.file.level = false; // Logs off
@@ -33,11 +42,11 @@ function createWindow() {
       responseHeaders: {
         ...details.responseHeaders,
         'Content-Security-Policy': [
-          "default-src 'self' http://localhost:8000;",
+          `default-src 'self' ${BASE_URL};`,
           "script-src 'self' 'unsafe-inline';",
           "style-src 'self' 'unsafe-inline';",
           "img-src 'self' data: https:;",
-          "connect-src 'self' http://localhost:8000;",
+          `connect-src 'self' ${BASE_URL};`,
           "media-src 'self' mediastream:;",
         ].join(' '),
       },
@@ -64,6 +73,13 @@ app.on('window-all-closed', function () {
 ipcMain.on('app-quit', () => {
   log.info('User requested to quit the app via UI');
   app.quit();
+});
+
+ipcMain.handle('get-config', () => {
+  return {
+    baseUrl: BASE_URL,
+    asrBackendType: ASR_BACKEND_TYPE,
+  };
 });
 
 ipcMain.on('log-info', (event, ...args) => {

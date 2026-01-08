@@ -1,5 +1,9 @@
 from fastapi import FastAPI, WebSocket, UploadFile, File, HTTPException, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
+
+# Load .env from project root
+load_dotenv()
 
 import numpy as np
 import soundfile as sf
@@ -42,13 +46,32 @@ class StreamingManager:
     def init_streaming_backend(self) -> bool:
         self.model_status = "initializing"
         self.model_error = None
-        self.streaming_pipe = StreamingPipeline(
-            model="TheStageAI/thewhisper-large-v3-turbo",
-            chunk_length_s=10,
-            min_process_chunk_s=0.5,
-            platform="apple",
-        )
-        print("Streaming backend initialized")
+
+        # Read ASR backend type from environment: "apple" (local) or "whisper" (remote)
+        asr_backend_type = os.getenv("ASR_BACKEND_TYPE", "apple").lower()
+
+        if asr_backend_type == "whisper":
+            # Use remote Triton/Whisper backend
+            self.streaming_pipe = StreamingPipeline(
+                chunk_length_s=int(os.getenv("CHUNK_SECONDS", "15")),
+                min_process_chunk_s=0.5,
+                use_remote_api=True,
+                api_url=os.getenv("TRITON_URL"),
+                api_auth_token=os.getenv("TRITON_AUTH_TOKEN"),
+                api_model_name=os.getenv("TRITON_MODEL_NAME"),
+                api_lang_id=os.getenv("TRITON_LANG_ID"),
+            )
+            print(f"Streaming backend initialized with remote Whisper/Triton API")
+        else:
+            # Use local Apple MLX backend (default)
+            self.streaming_pipe = StreamingPipeline(
+                model="TheStageAI/thewhisper-large-v3-turbo",
+                chunk_length_s=int(os.getenv("CHUNK_SECONDS", "10")),
+                min_process_chunk_s=0.5,
+                platform="apple",
+            )
+            print(f"Streaming backend initialized with local Apple MLX")
+
         return True
 
     async def end_session(self, session_id: str) -> None:
@@ -176,7 +199,7 @@ def main():
     import uvicorn
 
     host = os.getenv("ASR_STREAMING_HOST", "127.0.0.1")
-    port = os.getenv("ASR_STREAMING_PORT", 8000)
+    port = int(os.getenv("ASR_STREAMING_PORT", "8800"))
 
     streaming_manager = StreamingManager()
 

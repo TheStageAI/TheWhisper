@@ -31,6 +31,7 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - [🛠️ Support Matrix](#%EF%B8%8F-support-matrix-and-system-requirements)
 - [💡 Usage](#%EF%B8%8F-usage-and-deployment)
 - [🖥️ Build On-Device Desktop Application for Apple](#-build-on-device-desktop-application-for-apple)
+- [⚙️ Configuration](#%EF%B8%8F-configuration)
 - [📊 Benchmarks](#-benchmarks)
 - [🏢 Enterprise License Summary](#-enterprise-license-summary)
 - [🧭 Development Status](#-development-status)
@@ -240,6 +241,70 @@ print(result["text"])
 
 You can build a macOS desktop app with real-time transcription. Find a simple ReactJS application here: **Link to React Frontend**
 You can also download our app built using this backend here: [TheNotes for macOS](https://cdn.thestage.ai/production/cms_file_upload/1761693601-8ef0605f-a2e0-4bef-97c1-b61452e4f7dc/The%20Notes%20Package%20Oct%2028%202025.pkg)
+
+-----
+
+## ⚙️ Configuration
+
+All configuration is done via a single `.env` file in the project root. Copy the example file to get started:
+
+```bash
+cp .env.example .env
+```
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `BACKEND_MODE` | `local` or `remote` | `local` |
+| `LOCAL_BACKEND_URL` | URL for local backend | `http://localhost:8800` |
+| `REMOTE_BACKEND_URL` | URL for remote backend | `https://api.thestage.ai` |
+| `ASR_BACKEND_TYPE` | `apple` (local MLX) or `whisper` (remote Triton) | `apple` |
+| `TRITON_URL` | Triton inference server endpoint | `http://127.0.0.1:8080/v1/audio/transcriptions` |
+| `TRITON_AUTH_TOKEN` | Authentication token for Triton API | - |
+| `TRITON_MODEL_NAME` | Model name deployed on Triton | `thewhisper-large-v3-turbo-xl-cl15-bs16` |
+| `TRITON_LANG_ID` | Language code for transcription | `en` |
+| `ASR_STREAMING_PORT` | Port for the streaming ASR server | `8800` |
+| `CHUNK_SECONDS` | Audio chunk size in seconds | `15` |
+
+### Set variables
+```bash
+export $(cat .env | grep -v "^#" | xargs)
+```
+
+### Running with Apple Backend (Local MLX)
+
+For local on-device inference using Apple Silicon:
+
+```bash
+# Set in .env
+ASR_BACKEND_TYPE=apple
+
+# Start the streaming server
+python examples/server.py
+```
+
+### Running with Whisper Backend (Remote Triton)
+
+For remote inference using NVIDIA Triton Inference Server:
+
+1. Deploy the Whisper model on Triton Inference Server
+2. Configure your `.env`:
+3. Start the streaming server:
+
+```bash
+python examples/server.py
+```
+
+### Running the Electron App
+
+```bash
+cd electron_app
+npm install
+npm start
+```
+
+The Electron app reads configuration from the root `.env` file automatically
 
 -----
 

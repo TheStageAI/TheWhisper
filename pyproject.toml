@@ -25,6 +25,8 @@ dependencies = [
   "uvicorn",
   "python-multipart",
   "sounddevice",
+  "httpx",
+  "python-dotenv",
 ]
 
 [project.optional-dependencies]

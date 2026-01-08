@@ -25,6 +25,8 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
         torch_dtype: Optional[torch.dtype] = None,
         **kwargs,
     ):
+        revision = kwargs.pop('revision', 'main')
+        
         if type(model) is str:
             model_name = model
             config = WhisperConfig.from_pretrained(model_name)
@@ -33,6 +35,7 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
                 mode=model_size,
                 chunk_length=chunk_length_s,
                 torch_dtype=torch_dtype,
+                revision=revision
             )
             processor = WhisperProcessor.from_pretrained(
                 model_name, chunk_length=chunk_length_s

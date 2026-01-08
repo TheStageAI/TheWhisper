@@ -57,7 +57,17 @@ let processingLoopActive = false;
 
 /////////////////////////////////////// API SERVER ////////////////////////////////////////////////
 const api = {
-  BASE_URL: 'http://localhost:8000',
+  BASE_URL: null,
+  asrBackendType: null,
+
+  async init() {
+    const config = await window.electronAPI.getConfig();
+    this.BASE_URL = config.baseUrl;
+    this.asrBackendType = config.asrBackendType || 'apple';
+    window.electronAPI.log.info('API initialized with BASE_URL:', this.BASE_URL);
+    window.electronAPI.log.info('ASR Backend Type:', this.asrBackendType);
+    updateBackendIndicator(this.asrBackendType);
+  },
 
   // SESSION CREATE
   async createSession() {
@@ -469,9 +479,18 @@ function showErrorModal(message) {
   modal.classList.add('error-wrapper_open');
 }
 
+function updateBackendIndicator(backendType) {
+  const backendValue = document.getElementById('backendValue');
+  if (!backendValue) return;
+
+  backendValue.textContent = backendType === 'whisper' ? 'Whisper' : 'Apple MLX';
+  backendValue.className = 'backend-value ' + (backendType === 'whisper' ? 'whisper' : 'apple');
+}
+
 /////////////////////////////////////// INITIALIZATION APP ////////////////////////////////////////
 async function initializeApp() {
   preloaderOpen();
+  await api.init();
   const initialized = await api.createSession();
   if (!initialized) {
     window.electronAPI.log.error('Failed to initialize application');
