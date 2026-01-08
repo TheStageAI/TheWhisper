@@ -39,6 +39,8 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
         torch_dtype: Optional[torch.dtype] = None,
         **kwargs,
     ):
+        revision = kwargs.pop('revision', 'main')
+
         if type(model) is str:
             model_name = model
 
@@ -50,6 +52,7 @@ class ASRPipeline(AutomaticSpeechRecognitionPipeline):
                     mode=model_size,
                     chunk_length=chunk_length_s,
                     torch_dtype=torch_dtype,
+                    revision=revision
                 )
             else:
                 model = HFWhisperForConditionalGeneration.from_pretrained(
