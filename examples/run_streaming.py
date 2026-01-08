@@ -29,6 +29,12 @@ parser.add_argument(
     default='en',
     help="Language of the audio",
 )
+parser.add_argument(
+    "--audio-file",
+    type=str,
+    default='example_speech.wav',
+    help="Path to the audio file to transcribe",
+)
 args = parser.parse_args()
 
 # Silence Transformers logs
@@ -53,7 +59,7 @@ streaming_model = StreamingPipeline(
 if args.use_mic:
     audio_stream = MicStream(step_size_s=args.step_size)
 else:
-    audio_stream = FileStream("example_speech.wav", step_size_s=args.step_size)
+    audio_stream = FileStream(args.audio_file, step_size_s=args.step_size)
 
 output_stream = StdoutStream()
 full_approved_text = ""
@@ -62,7 +68,7 @@ while True:
     chunk = audio_stream.next_chunk()
     if chunk is not None:
         approved, assumption = streaming_model(chunk)
-        # output_stream.write(approved, assumption)
+
         approved_text = "".join([token['text'] for token in approved])
         assumption_text = "".join([token['text'] for token in assumption])
         full_approved_text += approved_text
