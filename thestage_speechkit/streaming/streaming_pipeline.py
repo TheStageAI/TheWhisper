@@ -692,7 +692,7 @@ class StreamingPipeline:
         elif last_comma_index:
             out = final_words[last_comma_index]['end']
         
-        elif max_pause_index >= 0:
+        elif max_pause_index is not None and max_pause_index >= 0:
             out = final_words[max_pause_index]['end']
         
         elif len(final_words) >= 2:
