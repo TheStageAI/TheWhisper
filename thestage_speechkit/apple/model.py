@@ -327,6 +327,9 @@ class HFMLXDecoder(torch.nn.Module):
         return_dict=None,
         cache_position=None,
     ):
+        if input_ids.shape[-1] == 3:
+            input_ids = torch.cat([input_ids, torch.tensor([[50364]])], dim=-1)
+        
         # Convert torch tensors to MLX arrays
         device = (
             input_ids.device
