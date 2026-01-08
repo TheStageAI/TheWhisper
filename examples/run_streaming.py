@@ -23,6 +23,12 @@ parser.add_argument(
     default=0.5,
     help="Minimum accumulated audio (in seconds) before running ASR processing",
 )
+parser.add_argument(
+    "--language",
+    type=str,
+    default='en',
+    help="Language of the audio",
+)
 args = parser.parse_args()
 
 # Silence Transformers logs
@@ -40,7 +46,7 @@ streaming_model = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
     chunk_length_s=10,
     platform='apple',
-    language='en',
+    language=args.language,
     min_process_chunk_s=args.process_window,
 )
 
@@ -50,12 +56,29 @@ else:
     audio_stream = FileStream("example_speech.wav", step_size_s=args.step_size)
 
 output_stream = StdoutStream()
+full_approved_text = ""
 
 while True:
     chunk = audio_stream.next_chunk()
     if chunk is not None:
         approved, assumption = streaming_model(chunk)
-        output_stream.write(approved, assumption)
+        # output_stream.write(approved, assumption)
+        approved_text = "".join([token['text'] for token in approved])
+        assumption_text = "".join([token['text'] for token in assumption])
+        full_approved_text += approved_text
+        # Print approved text in green and assumption text in yellow
+        if approved_text or assumption_text:
+            green = "\033[92m"
+            yellow = "\033[93m"
+            reset = "\033[0m"
+            output = ""
+            if full_approved_text:
+                output += f"{green}{full_approved_text}{reset}"
+            if assumption_text:
+                if approved_text:
+                    output += " "
+                output += f"{yellow}{assumption_text}{reset}"
+            print(output)
     else:
         break
 
