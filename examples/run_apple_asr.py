@@ -17,7 +17,6 @@ pipe = ASRPipeline(
     "TheStageAI/thewhisper-large-v3-turbo",
     chunk_length_s=chunk_length_s,
     model_size="S",
-    # revision='v2'
 )
 generate_kwargs = {
     "max_new_tokens": 128,

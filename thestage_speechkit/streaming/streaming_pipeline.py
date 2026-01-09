@@ -336,6 +336,7 @@ class LocalWhisperBackend(TranscriptionBackend):
         language: str = "en",
         feature_extractor: Optional["SequenceFeatureExtractor"] = None,
         tokenizer: Optional["PreTrainedTokenizer"] = None,
+        revision: str = 'main'
     ):
 
         if platform == "apple":
@@ -366,12 +367,8 @@ class LocalWhisperBackend(TranscriptionBackend):
             device=device,
             feature_extractor=feature_extractor,
             tokenizer=tokenizer,
+            revision=revision
         )
-
-        special_tokens: str = f"<|startoftranscript|><|{language}|><|transcribe|>"
-        self.encoded_special_tokens = self.asr_pipeline.tokenizer(
-            special_tokens, return_tensors="pt", add_special_tokens=False
-        ).input_ids
 
     def transcribe(
         self,
@@ -454,6 +451,7 @@ class StreamingPipeline:
         request_timeout_s: Optional[float] = None,
         bytes_per_sample: int = 2,
         sample_rate: int = 16000,
+        revision='main'
     ):
         self.sample_rate: int = sample_rate
         self.chunk_length_s: float = chunk_length_s
@@ -479,6 +477,7 @@ class StreamingPipeline:
             api_lang_id=api_lang_id,
             request_timeout_s=request_timeout_s,
             bytes_per_sample=bytes_per_sample,
+            revision=revision
         )
 
         self.no_speech_streak: int = 0
@@ -509,6 +508,7 @@ class StreamingPipeline:
         api_lang_id: Optional[str],
         request_timeout_s: Optional[float],
         bytes_per_sample: int,
+        revision: str
     ) -> TranscriptionBackend:
         """Resolve which backend to use: injected, remote, or local."""
         if backend is not None:
@@ -536,6 +536,7 @@ class StreamingPipeline:
             language=language,
             feature_extractor=feature_extractor,
             tokenizer=tokenizer,
+            revision=revision,
         )
 
     def __call__(
@@ -655,7 +656,7 @@ class StreamingPipeline:
             token['text'] = token['text'].replace('gotTA', 'gotta')
             token['text'] = token['text'].replace('wanNA', 'wanna')
 
-        if len(filtered_tokens) == 1 and filtered_tokens[0]['text'].strip() in ['The.', 'The']:
+        if len(filtered_tokens) == 1 and filtered_tokens[0]['text'].strip() in ['The.', 'The', 'I.']:
             filtered_tokens = []
 
         return filtered_tokens
