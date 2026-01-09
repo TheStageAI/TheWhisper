@@ -178,9 +178,9 @@ output_stream = StdoutStream()
 
 while True:
     chunk = mic_stream.next_chunk()
-    if chunk:
+    if chunk is not None:
         approved_text, assumption = streaming_pipe(chunk)
-        output_stream.rewrite(approved_text, assumption)
+        output_stream.write(approved_text, assumption)
     else:
         break
 ```
