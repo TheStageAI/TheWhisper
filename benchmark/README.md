@@ -16,7 +16,7 @@ For all evaluations we used following settings:
 **Huggingface Open-ASR-Leaderboard (English)**
 
 | Dataset | TheWhisper | openai/whisper-large-v3-turbo | nvidia/parakeet-tdt-0.6b-v3 | ibm-granite/granite-speech-3.3-2b | 
-|---------|---------------|-------------------------------|-----------------------------|
+|---------|------------|----------------------------|--------------------------|--------------------------------|
 | librispeech_clean_test | 1.80 | 2.1 | 1.92 | 1.53 |
 | librispeech_other_test | 3.96 | 4.24 | 3.59 | 3.26 |
 | spgispeech_test | 1.93 | 2.97 | 3.98 | 3.87 |
