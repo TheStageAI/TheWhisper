@@ -35,6 +35,12 @@ parser.add_argument(
     default='example_speech.wav',
     help="Path to the audio file to transcribe",
 )
+parser.add_argument(
+    "--platform",
+    type=str,
+    default='apple',
+    help="Platform name: apple or nvidia",
+)
 args = parser.parse_args()
 
 # Silence Transformers logs
@@ -51,7 +57,7 @@ warnings.filterwarnings(
 streaming_model = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
     chunk_length_s=10,
-    platform='apple',
+    platform=args.platform,
     language=args.language,
     min_process_chunk_s=args.process_window,
 )
