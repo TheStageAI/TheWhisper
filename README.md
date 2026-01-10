@@ -80,8 +80,8 @@ pip install .[nvidia]
 
 ### Install for Nvidia with TheStage AI optmized engines
 ```bash
-pip install .[nvidia]
 pip install 'thestage-elastic-models[nvidia]' --index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple --extra-index-url https://pypi.nvidia.com --extra-index-url https://pypi.org/simple
+pip install .[nvidia]
 pip install thestage
 ```
 
