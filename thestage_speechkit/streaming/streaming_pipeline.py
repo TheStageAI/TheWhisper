@@ -17,6 +17,8 @@ torch.set_grad_enabled(False)
 from transformers import SequenceFeatureExtractor, PreTrainedTokenizer
 from transformers.utils import logging as hf_logging
 
+from ..vad import batched_vad
+
 logger = logging.getLogger(__name__)
 
 hf_logging.set_verbosity_error()
@@ -451,7 +453,10 @@ class StreamingPipeline:
         request_timeout_s: Optional[float] = None,
         bytes_per_sample: int = 2,
         sample_rate: int = 16000,
-        revision='main'
+        revision='main',
+        # VAD parameters
+        use_vad: bool = True,
+        vad_threshold: float = 0.1,
     ):
         self.sample_rate: int = sample_rate
         self.chunk_length_s: float = chunk_length_s
@@ -480,15 +485,28 @@ class StreamingPipeline:
             revision=revision
         )
 
-        self.no_speech_streak: int = 0
-        self.speech_threshold: float = 0.5
-
         self.current_audio_buffer: Optional[np.ndarray] = None
         self.buffer_start_time: float = 0.0
         self.current_time: float = 0.0
         self.audio_queue: List[np.ndarray] = []
 
         self.history: List[List[Dict[str, Any]]] = []
+
+        # VAD state
+        self.need_to_process: bool = False
+        self.use_vad: bool = use_vad
+        self.vad_threshold: float = vad_threshold
+        self.speech_streak: int = 0
+        self.vad_model: Optional[Any] = None
+
+        if use_vad:
+            self.vad_model, _ = torch.hub.load(
+                # repo_or_dir='snakers4/silero-vad', 
+                repo_or_dir='./snakers4_silero-vad_master',
+                model='silero_vad',
+                trust_repo=True,
+                source='local'
+            )
 
     @staticmethod
     def _resolve_backend(
@@ -563,9 +581,24 @@ class StreamingPipeline:
         accumulated duration reaches at least `min_process_chunk_s` seconds,
         the combined audio is pushed into `audio_queue` as a single larger
         chunk for downstream processing.
+        
+        When VAD is enabled, each small chunk is checked for speech activity.
+        If at least one small chunk contains speech, the accumulated chunk
+        will be processed; otherwise transcription is skipped.
         """
         if chunk is None or len(chunk) == 0:
             return
+
+        # Run VAD on small chunk before accumulating
+        if self.vad_model is not None:
+            chunk_has_speech = batched_vad(
+                self.vad_model, 
+                chunk, 
+                sampling_rate=self.sample_rate, 
+                threshold=self.vad_threshold
+            )
+            if chunk_has_speech:
+                self.speech_streak += 1
 
         # Accumulate into pending buffer
         if self._pending_chunk is None:
@@ -575,13 +608,15 @@ class StreamingPipeline:
 
         pending_duration = len(self._pending_chunk) / self.sample_rate
 
-        # If we have not yet reached the minimum processing window, do nothing.
-        if pending_duration < self.min_process_chunk_s:
-            return
-
-        # Enough audio accumulated: push to main queue as one "big" chunk.
-        self.audio_queue.append(self._pending_chunk)
-        self._pending_chunk = None
+        # Enough audio accumulated: push to main queue as one "big" chunk
+        if pending_duration >= self.min_process_chunk_s:
+            self.audio_queue.append(self._pending_chunk)
+            self._pending_chunk = None
+            
+            if not self.use_vad or self.speech_streak >= 1:
+                self.need_to_process = True
+            
+            self.speech_streak = 0
 
     def process_new_chunk(
         self,
@@ -604,29 +639,30 @@ class StreamingPipeline:
         if self.current_audio_buffer is None:
             self.current_audio_buffer = chunk
         else:
-            self.current_audio_buffer = np.concatenate(
-                [self.current_audio_buffer, chunk]
-            )
+            self.current_audio_buffer = np.concatenate([self.current_audio_buffer, chunk])
+
+        commited_words = []
+        uncommited_words = []
 
         # Run transcription on the current buffer
-        new_words = self._run_transcription(self.current_audio_buffer)
-        new_words = self._postprocess_transcribtions(new_words)
-
-        # update history
-        self.history.append(new_words)
+        if self.need_to_process:
+            new_words = self._run_transcription(self.current_audio_buffer)
+            new_words = self._postprocess_transcribtions(new_words)
+            self.need_to_process = False
+            uncommited_words = new_words
+            # update history
+            self.history.append(new_words)
 
         # Ensure the buffer does not grow unbounded
         max_allowed_size = (self.window_size - self.min_process_chunk_s) * self.sample_rate
+        # maybe_trim_size = (self.window_size // 2) * self.sample_rate
+
         if len(self.current_audio_buffer) > max_allowed_size:
             final_text = self._extract_final_text()
             truncation_time = self._get_truncation_time(final_text)
             self._trim_audio_buffer(truncation_time)
-            commited_words = [word for word in final_text if word['end'] <= truncation_time]
-            uncommited_words = [word for word in new_words if word['end'] > truncation_time]
-            self.history = []
-        else:
-            commited_words = []
-            uncommited_words = new_words
+            commited_words = [word for word in final_text if word['start'] < truncation_time]
+            uncommited_words = [word for word in final_text if word['start'] >= truncation_time]
 
         return commited_words, uncommited_words
 
@@ -650,6 +686,8 @@ class StreamingPipeline:
         for token in filtered_tokens:
             if token["text"] and not token["text"].startswith(" "):
                 token["text"] = " " + token["text"]
+            if token["text"].startswith(' -'):
+                token["text"] = token["text"].replace(' -', '-')
         
         for token in filtered_tokens:
             token['text'] = token['text'].replace('gonNA', 'gonna')
@@ -662,7 +700,12 @@ class StreamingPipeline:
         return filtered_tokens
 
     def _extract_final_text(self):
-        return self.history[-1]
+        if len(self.history) > 0:
+            final_text = self.history[-1]
+            self.history = []
+        else:
+            final_text = []
+        return final_text
 
     def _get_truncation_time(self, final_words):
         last_end_of_sentence_index = None
@@ -675,10 +718,13 @@ class StreamingPipeline:
 
         for i, word in enumerate(final_words):
             text = word['text'].strip()
-            if (text.endswith('.') or text.endswith('?') or text.endswith('!')) and i != last_word:
+            timestamp = word['end']
+            # if (text.endswith('.') or text.endswith('?') or text.endswith('!')) and i != last_word:
+            if (text.endswith('.') or text.endswith('?') or text.endswith('!')) and timestamp < self.current_time - 1.:
                 last_end_of_sentence_index = i
             
-            if (text.endswith(',') or text.endswith(';') or text.endswith(':')) and i != last_word:
+            # if (text.endswith(',') or text.endswith(';') or text.endswith(':')) and i != last_word:
+            if (text.endswith(',') or text.endswith(';') or text.endswith(':')) and timestamp < self.current_time - 1.:
                 last_comma_index = i
             
             if word['start'] - prev_word_end >= max_pause_duration:
@@ -737,5 +783,10 @@ class StreamingPipeline:
         self.buffer_start_time = 0.0
         self.current_time = 0.0
         self.audio_queue = []
-        self.no_speech_streak = 0
         self.speech_threshold = 0.5
+        self.speech_streak = 0
+        self.history = []
+        
+        # Reset VAD model state if it exists
+        if self.vad_model is not None:
+            self.vad_model.reset_states()

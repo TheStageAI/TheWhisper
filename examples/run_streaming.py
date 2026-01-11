@@ -35,12 +35,6 @@ parser.add_argument(
     default='example_speech.wav',
     help="Path to the audio file to transcribe",
 )
-parser.add_argument(
-    "--platform",
-    type=str,
-    default='apple',
-    help="Platform name: apple or nvidia",
-)
 args = parser.parse_args()
 
 # Silence Transformers logs
@@ -57,9 +51,10 @@ warnings.filterwarnings(
 streaming_model = StreamingPipeline(
     model='TheStageAI/thewhisper-large-v3-turbo',
     chunk_length_s=10,
-    platform=args.platform,
+    platform='apple',
     language=args.language,
     min_process_chunk_s=args.process_window,
+    # revision='15d196cdee60d9ff98b7eadb549aa2566e83218c'
 )
 
 if args.use_mic:
@@ -67,8 +62,10 @@ if args.use_mic:
 else:
     audio_stream = FileStream(args.audio_file, step_size_s=args.step_size)
 
-output_stream = StdoutStream()
 full_approved_text = ""
+green = "\033[92m"
+yellow = "\033[93m"
+reset = "\033[0m"
 
 while True:
     chunk = audio_stream.next_chunk()
@@ -80,9 +77,6 @@ while True:
         full_approved_text += approved_text
         # Print approved text in green and assumption text in yellow
         if approved_text or assumption_text:
-            green = "\033[92m"
-            yellow = "\033[93m"
-            reset = "\033[0m"
             output = ""
             if full_approved_text:
                 output += f"{green}{full_approved_text}{reset}"
@@ -95,4 +89,3 @@ while True:
         break
 
 audio_stream.close()
-output_stream.close()
