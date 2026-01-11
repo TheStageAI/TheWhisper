@@ -31,7 +31,6 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - [🛠️ Support Matrix](#%EF%B8%8F-support-matrix-and-system-requirements)
 - [💡 Usage](#%EF%B8%8F-usage-and-deployment)
 - [🖥️ Build On-Device Desktop Application for Apple](#-build-on-device-desktop-application-for-apple)
-- [⚙️ Configuration](#%EF%B8%8F-configuration)
 - [📊 Benchmarks](#-benchmarks)
 - [🏢 Enterprise License Summary](#-enterprise-license-summary)
 - [🧭 Development Status](#-development-status)
@@ -246,50 +245,15 @@ You can also download our app built using this backend here: [TheNotes for macOS
 
 ## 📊 Benchmarks
 
-TheWhisper is a fine-tuned Whisper model that can process audio chunks of any size up to 30 seconds. Unlike the original Whisper models, it doesn't require padding audio with silence to reach 30 seconds. We conducted quality benchmarking across different chunk sizes: 10, 15, 20, and 30 seconds. For quality benchmarks, we used the multilingual benchmarks [Open ASR Leaderboard](https://github.com/huggingface/open_asr_leaderboard#evaluate-a-model).
+TheWhisper is a fine-tuned Whisper model that can process audio chunks of any size up to 30 seconds. Unlike the original Whisper models, it doesn't require padding audio with silence to reach 30 seconds. For quality benchmarks, we used the multilingual benchmarks [Open ASR Leaderboard](https://github.com/huggingface/open_asr_leaderboard#evaluate-a-model).
 
 For comprehensive quality and performance benchmarks, including comparisons with other Whisper inference solutions, please refer to the [benchmark/](benchmark/README.md) directory.
 
 <img width="1547" height="531" alt="vanilla whisper (1)" src="https://github.com/user-attachments/assets/f0c86e58-d834-4ac7-a06b-df3a7ae3e9e9" />
 <img width="1547" height="458" alt="TheStage AI Whisper (1)" src="https://github.com/user-attachments/assets/17fb45a3-b33d-4c83-b843-69b0f0aa3f65" />
 
-
-### 10s chunks
-
-| Model | Mean WER |
-|-------|-----------------|
-| openai/whisper-large-v3-turbo | 7.81 |
-| openai/whisper-large-v3 | 7.45 |
-| thewhisper-large-v3-turbo | 7.94 |
-| thewhisper-large-v3 | 7.87 |
-
-
-### 15s chunks
-
-| Model | Mean WER |
-|-------|-----------------|
-| openai/whisper-large-v3-turbo | 7.61 |
-| openai/whisper-large-v3 | 7.22 |
-| thewhisper-large-v3-turbo | 7.62 |
-| thewhisper-large-v3 | 7.34 |
-
-### 20s chunks
-
-| Model | Mean WER |
-|-------|-----------------|
-| openai/whisper-large-v3-turbo | 7.63 |
-| openai/whisper-large-v3 | 7.29 |
-| thewhisper-large-v3-turbo | 7.47 |
-| thewhisper-large-v3 | 7.31 |
-
-### 30s chunks
-
-| Model | Mean WER |
-|-------|-----------------|
-| openai/whisper-large-v3-turbo | 7.61 |
-| openai/whisper-large-v3 | 7.32 |
-| thewhisper-large-v3-turbo | 7.67 |
-| thewhisper-large-v3 | 7.28 |
+<img width="1547" height="531" alt="Open ASR Leaderboard Benchmark" src="https://cdn.thestage.ai/production/cms_file_upload/1768127846-afbe7f94-4109-4685-9946-b1fa618bc04a/Open ASR Leaderboard Benchmark (6).png" />
+<img width="1547" height="531" alt="Multilingual Benchmark" src="https://cdn.thestage.ai/production/cms_file_upload/1768127897-e1bf74d8-b8cc-4c90-9121-607f6a37aeda/Multilingual Benchmark.png" />
 
 ---
 
