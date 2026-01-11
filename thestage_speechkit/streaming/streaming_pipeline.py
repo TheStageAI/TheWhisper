@@ -501,11 +501,11 @@ class StreamingPipeline:
 
         if use_vad:
             self.vad_model, _ = torch.hub.load(
-                # repo_or_dir='snakers4/silero-vad', 
-                repo_or_dir='./snakers4_silero-vad_master',
+                repo_or_dir='snakers4/silero-vad', 
+                # repo_or_dir='./snakers4_silero-vad_master',
                 model='silero_vad',
                 trust_repo=True,
-                source='local'
+                # source='local'
             )
 
     @staticmethod
