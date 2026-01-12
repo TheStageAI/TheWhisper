@@ -60,6 +60,7 @@ streaming_model = StreamingPipeline(
     platform=args.platform,
     language=args.language,
     min_process_chunk_s=args.process_window,
+    # revision='1b649dccd5944ef5a38ade18cae1c2d5ead144f2'
 )
 
 if args.use_mic:
