@@ -671,16 +671,26 @@ class StreamingPipeline:
 
         # Ensure the buffer does not grow unbounded
         max_allowed_size = (self.window_size - self.min_process_chunk_s) * self.sample_rate
-        # maybe_trim_size = (self.window_size // 2) * self.sample_rate
+        maybe_trim_size = (self.window_size // 2) * self.sample_rate
+        
+        need_to_trim = False
+        maybe_trim = False
 
         if len(self.current_audio_buffer) > max_allowed_size:
+            need_to_trim = True
+        elif len(self.current_audio_buffer) > maybe_trim_size:
+            maybe_trim = True
+
+        if need_to_trim or maybe_trim:
             final_text = self._extract_final_text()
-            truncation_time = self._get_truncation_time(final_text)
-            self._trim_audio_buffer(truncation_time)
-            commited_words = [word for word in final_text if word['start'] < truncation_time]
-            uncommited_words = [word for word in final_text if word['start'] >= truncation_time]
-            if len(commited_words) > 0:
-                self._last_committed_word = commited_words[-1]['text'].strip()
+            truncation_time = self._get_truncation_time(final_text, need_to_trim)
+
+            if truncation_time is not None:
+                self._trim_audio_buffer(truncation_time)
+                commited_words = [word for word in final_text if word['start'] < truncation_time]
+                uncommited_words = [word for word in final_text if word['start'] >= truncation_time]
+                if len(commited_words) > 0:
+                    self._last_committed_word = commited_words[-1]['text'].strip()
 
         return commited_words, uncommited_words
 
@@ -729,7 +739,7 @@ class StreamingPipeline:
             final_text = []
         return final_text
 
-    def _get_truncation_time(self, final_words):
+    def _get_truncation_time(self, final_words, need_to_trim: bool = True):
         last_end_of_sentence_index = None
         last_comma_index = None
         max_pause_index = None
@@ -754,23 +764,25 @@ class StreamingPipeline:
                 max_pause_index = i - 1
             
             prev_word_end = word['end']
-        
+
+        out = None
+
         if last_end_of_sentence_index:
             out = final_words[last_end_of_sentence_index]['end']
         
         elif last_comma_index:
             out = final_words[last_comma_index]['end']
         
-        elif max_pause_index is not None and max_pause_index >= 0:
+        elif max_pause_index is not None and max_pause_index >= 0 and need_to_trim:
             out = final_words[max_pause_index]['end']
         
-        elif len(final_words) >= 2:
+        elif len(final_words) >= 2 and need_to_trim:
             out = final_words[-2]['end']
         
-        elif len(final_words) == 1:
+        elif len(final_words) == 1 and need_to_trim:
             out = final_words[0]['end']
         
-        else:
+        elif need_to_trim:
             out = self.current_time - self.min_process_chunk_s * 2
 
         return out
