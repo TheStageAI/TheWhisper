@@ -11,13 +11,28 @@ from typing import List, Dict, Optional, Any, Tuple
 import numpy as np
 import httpx
 
-import torch
-torch.set_grad_enabled(False)
-
-from transformers import SequenceFeatureExtractor, PreTrainedTokenizer
-from transformers.utils import logging as hf_logging
-
 from ..vad import batched_vad
+
+try:
+    import torch  # type: ignore
+
+    torch.set_grad_enabled(False)
+    TORCH_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    torch = None  # type: ignore
+    TORCH_AVAILABLE = False
+
+try:
+    from transformers import SequenceFeatureExtractor, PreTrainedTokenizer  # type: ignore
+    from transformers.utils import logging as hf_logging  # type: ignore
+
+    hf_logging.set_verbosity_error()
+
+    TRANSFORMERS_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    SequenceFeatureExtractor = PreTrainedTokenizer = None  # type: ignore
+    hf_logging = None  # type: ignore
+    TRANSFORMERS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -491,6 +506,7 @@ class StreamingPipeline:
         self.audio_queue: List[np.ndarray] = []
 
         self.history: List[List[Dict[str, Any]]] = []
+        self._last_committed_word: Optional[str] = None
 
         # VAD state
         self.need_to_process: bool = False
@@ -663,6 +679,8 @@ class StreamingPipeline:
             self._trim_audio_buffer(truncation_time)
             commited_words = [word for word in final_text if word['start'] < truncation_time]
             uncommited_words = [word for word in final_text if word['start'] >= truncation_time]
+            if len(commited_words) > 0:
+                self._last_committed_word = commited_words[-1]['text'].strip()
 
         return commited_words, uncommited_words
 
@@ -697,12 +715,16 @@ class StreamingPipeline:
         if len(filtered_tokens) == 1 and filtered_tokens[0]['text'].strip() in ['The.', 'The', 'I.']:
             filtered_tokens = []
 
+        if self._last_committed_word is not None and len(filtered_tokens) > 0:
+            first_word = filtered_tokens[0]['text'].strip().lower()
+            if first_word == self._last_committed_word.lower():
+                filtered_tokens = filtered_tokens[1:]
+
         return filtered_tokens
 
     def _extract_final_text(self):
         if len(self.history) > 0:
             final_text = self.history[-1]
-            self.history = []
         else:
             final_text = []
         return final_text
@@ -759,6 +781,13 @@ class StreamingPipeline:
             delta_samples = int(delta * self.sample_rate)
             self.current_audio_buffer = self.current_audio_buffer[delta_samples:]
             self.buffer_start_time = truncation_time
+
+            new_history = []
+            for el in self.history:
+                el = [word for word in el if word['start'] >= truncation_time]
+                if len(el) > 0:
+                    new_history.append(el)
+            self.history = new_history
 
     def _run_transcription(
         self,
