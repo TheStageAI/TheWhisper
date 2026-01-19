@@ -11,7 +11,6 @@ from typing import List, Dict, Optional, Any, Tuple
 import numpy as np
 import httpx
 
-from ..vad import batched_vad
 
 try:
     import torch  # type: ignore
@@ -371,7 +370,6 @@ class LocalWhisperBackend(TranscriptionBackend):
             torch_dtype = torch.float16  # type: ignore[union-attr]
 
         self.chunk_length_s: float = chunk_length_s
-        self.window_size: float = chunk_length_s # - 2
         self.sample_rate: int = 16000
         self.device: str = device
         self.language: str = language
@@ -402,6 +400,8 @@ class LocalWhisperBackend(TranscriptionBackend):
             "do_sample": False,
             "max_new_tokens": max_new_tokens,
             "language": self.language,
+            
+            "compression_ratio_threshold": 1.3
         }
 
         result: Dict[str, Any] = self.asr_pipeline(
@@ -472,11 +472,14 @@ class StreamingPipeline:
         # VAD parameters
         use_vad: bool = True,
         vad_threshold: float = 0.1,
+        vad_no_speech_chunks: int = 5,
+        vad_prepend_chunks: int = 3,
     ):
         self.sample_rate: int = sample_rate
         self.chunk_length_s: float = chunk_length_s
         self.min_process_chunk_s: float = min_process_chunk_s
-        self.window_size: float = chunk_length_s # - 2
+        self.window_size: float = chunk_length_s - 1
+        
         self._pending_chunk: Optional[np.ndarray] = None
 
         # Choose backend via factory or use injected one
@@ -509,19 +512,25 @@ class StreamingPipeline:
         self._last_committed_word: Optional[str] = None
 
         # VAD state
+        self._prev_speech_mode: bool = False
         self.need_to_process: bool = False
         self.use_vad: bool = use_vad
         self.vad_threshold: float = vad_threshold
-        self.speech_streak: int = 0
         self.vad_model: Optional[Any] = None
+        
+        # VAD speech detection state
+        self._vad_history: List[bool] = []  # Recent VAD results (True=speech, False=no speech)
+        self._recent_chunks: List[np.ndarray] = []  # Recent small chunks for prepending
+        self._in_speech_mode: bool = False  # Whether we're currently collecting speech
+        self._no_speech_threshold: int = vad_no_speech_chunks  # Consecutive no-speech chunks to stop
+        self._prepend_chunks: int = vad_prepend_chunks  # Chunks to prepend when speech starts
+        self._vad_buffer: np.ndarray = np.array([], dtype=np.float32)  # Buffer for 512-sample VAD chunks
 
         if use_vad:
             self.vad_model, _ = torch.hub.load(
                 repo_or_dir='snakers4/silero-vad', 
-                # repo_or_dir='./snakers4_silero-vad_master',
                 model='silero_vad',
                 trust_repo=True,
-                # source='local'
             )
 
     @staticmethod
@@ -573,6 +582,41 @@ class StreamingPipeline:
             revision=revision,
         )
 
+    def _run_vad_sequential(self, audio: np.ndarray) -> bool:
+        """
+        Run VAD sequentially on 512-sample chunks.
+        
+        The Silero VAD model expects exactly 512 samples at 16kHz and maintains
+        internal state between calls for better context tracking.
+        
+        Args:
+            audio: Audio samples to process
+            
+        Returns:
+            True if speech was detected in any 512-sample chunk, False otherwise
+        """
+        if self.vad_model is None:
+            return True
+        
+        # Add new audio to the buffer
+        self._vad_buffer = np.concatenate([self._vad_buffer, audio.astype(np.float32)])
+        
+        has_speech = False
+        
+        # Process all complete 512-sample chunks
+        while len(self._vad_buffer) >= 512:
+            chunk_512 = self._vad_buffer[:512]
+            self._vad_buffer = self._vad_buffer[512:]
+            
+            # Run VAD on this 512-sample chunk
+            chunk_tensor = torch.from_numpy(chunk_512)
+            prob = self.vad_model(chunk_tensor, self.sample_rate).item()
+            
+            if prob > self.vad_threshold:
+                has_speech = True
+        
+        return has_speech
+
     def __call__(
         self, chunk: np.ndarray
     ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
@@ -591,32 +635,89 @@ class StreamingPipeline:
 
     def add_new_chunk(self, chunk: np.ndarray) -> None:
         """
-        Add a new *small* audio chunk to the internal accumulator.
-
-        Small chunks are first accumulated in `_pending_chunk`. Once the
-        accumulated duration reaches at least `min_process_chunk_s` seconds,
-        the combined audio is pushed into `audio_queue` as a single larger
-        chunk for downstream processing.
+        Add a new *small* audio chunk (~0.05s) to the pipeline.
         
-        When VAD is enabled, each small chunk is checked for speech activity.
-        If at least one small chunk contains speech, the accumulated chunk
-        will be processed; otherwise transcription is skipped.
+        Uses VAD to intelligently filter silence:
+        - Tracks speech/no-speech history for each small chunk
+        - Only accumulates audio during speech segments
+        - Prepends recent chunks when speech starts (to avoid cutting beginning)
+        - Pushes accumulated audio when speech ends or buffer reaches threshold
+        
+        This ensures the transcription pipeline doesn't receive long silence intervals.
         """
         if chunk is None or len(chunk) == 0:
             return
 
-        # Run VAD on small chunk before accumulating
-        if self.vad_model is not None:
-            chunk_has_speech = batched_vad(
-                self.vad_model, 
-                chunk, 
-                sampling_rate=self.sample_rate, 
-                threshold=self.vad_threshold
-            )
-            if chunk_has_speech:
-                self.speech_streak += 1
+        # If VAD is disabled, use simple accumulation logic
+        if not self.use_vad or self.vad_model is None:
+            self._accumulate_chunk_simple(chunk)
+            return
 
-        # Accumulate into pending buffer
+        # Run VAD sequentially on 512-sample chunks
+        chunk_has_speech = self._run_vad_sequential(chunk)
+        
+        # Store in recent chunks buffer (for prepending when speech starts)
+        self._recent_chunks.append(chunk)
+        if len(self._recent_chunks) > self._prepend_chunks:
+            self._recent_chunks.pop(0)
+        
+        # Store VAD result in history
+        self._vad_history.append(chunk_has_speech)
+        if len(self._vad_history) > self._no_speech_threshold:
+            self._vad_history.pop(0)
+        
+        # State machine for speech detection
+        if self._in_speech_mode:
+            # Currently collecting speech - append chunk to pending buffer
+            if self._pending_chunk is None:
+                self._pending_chunk = chunk
+            else:
+                self._pending_chunk = np.concatenate([self._pending_chunk, chunk])
+            
+            # Check if we should transition to no-speech mode
+            # (all recent VAD results are no-speech)
+            if (len(self._vad_history) >= self._no_speech_threshold and 
+                not any(self._vad_history[-self._no_speech_threshold:])):
+                # Transition: speech -> no-speech
+                self._in_speech_mode = False
+                # Push current pending chunk to queue
+                if self._pending_chunk is not None and len(self._pending_chunk) > 0:
+                    self.audio_queue.append(self._pending_chunk)
+                    self.need_to_process = True
+                    self._pending_chunk = None
+        else:
+            # Currently in no-speech mode - check if speech starts
+            if chunk_has_speech:
+                # Transition: no-speech -> speech
+                self._in_speech_mode = True
+                
+                # Prepend recent chunks to capture speech beginning
+                # (exclude current chunk as it will be added separately)
+                prepend_chunks = self._recent_chunks[:-1] if len(self._recent_chunks) > 1 else []
+                if prepend_chunks:
+                    self._pending_chunk = np.concatenate(prepend_chunks)
+                else:
+                    self._pending_chunk = None
+                
+                # Add current chunk
+                if self._pending_chunk is None:
+                    self._pending_chunk = chunk
+                else:
+                    self._pending_chunk = np.concatenate([self._pending_chunk, chunk])
+        
+        # Check if pending chunk should be pushed due to reaching size threshold
+        if self._pending_chunk is not None:
+            pending_duration = len(self._pending_chunk) / self.sample_rate
+            if pending_duration >= self.min_process_chunk_s:
+                self.audio_queue.append(self._pending_chunk)
+                self.need_to_process = True
+                self._pending_chunk = None
+
+    def _accumulate_chunk_simple(self, chunk: np.ndarray) -> None:
+        """
+        Simple accumulation logic when VAD is disabled.
+        Accumulates chunks until min_process_chunk_s is reached.
+        """
         if self._pending_chunk is None:
             self._pending_chunk = chunk
         else:
@@ -624,15 +725,10 @@ class StreamingPipeline:
 
         pending_duration = len(self._pending_chunk) / self.sample_rate
 
-        # Enough audio accumulated: push to main queue as one "big" chunk
         if pending_duration >= self.min_process_chunk_s:
             self.audio_queue.append(self._pending_chunk)
+            self.need_to_process = True
             self._pending_chunk = None
-            
-            if not self.use_vad or self.speech_streak >= 1:
-                self.need_to_process = True
-            
-            self.speech_streak = 0
 
     def process_new_chunk(
         self,
@@ -675,15 +771,23 @@ class StreamingPipeline:
         
         need_to_trim = False
         maybe_trim = False
+        truncation_time = None
 
         if len(self.current_audio_buffer) > max_allowed_size:
             need_to_trim = True
         elif len(self.current_audio_buffer) > maybe_trim_size:
-            maybe_trim = True
+           maybe_trim = True
+
+        if self._prev_speech_mode and not self._in_speech_mode and len(self.current_audio_buffer) > 1 * self.sample_rate:
+            need_to_trim = True
+            truncation_time = self.current_time # or use history last word end time
+
+        self._prev_speech_mode = self._in_speech_mode
 
         if need_to_trim or maybe_trim:
             final_text = self._extract_final_text()
-            truncation_time = self._get_truncation_time(final_text, need_to_trim)
+            if truncation_time is None:
+                truncation_time = self._get_truncation_time(final_text, need_to_trim)
 
             if truncation_time is not None:
                 self._trim_audio_buffer(truncation_time)
@@ -729,6 +833,19 @@ class StreamingPipeline:
             first_word = filtered_tokens[0]['text'].strip().lower()
             if first_word == self._last_committed_word.lower():
                 filtered_tokens = filtered_tokens[1:]
+
+        # time_filtered_tokens = []
+        # num_bad_tokens = 0
+
+        # for i,token in enumerate(filtered_tokens):
+        #     if i > 0:
+        #         if token['end'] == filtered_tokens[i-1]['end']:
+        #             num_bad_tokens += 1
+        #     if token['start'] == token['end']:
+        #         num_bad_tokens += 1
+
+        # if num_bad_tokens > 2:
+        #     return []
 
         return filtered_tokens
 
@@ -824,9 +941,15 @@ class StreamingPipeline:
         self.buffer_start_time = 0.0
         self.current_time = 0.0
         self.audio_queue = []
-        self.speech_threshold = 0.5
-        self.speech_streak = 0
+        self.need_to_process = False
         self.history = []
+        self._last_committed_word = None
+        
+        # Reset VAD state
+        self._vad_history = []
+        self._recent_chunks = []
+        self._in_speech_mode = False
+        self._vad_buffer = np.array([], dtype=np.float32)
         
         # Reset VAD model state if it exists
         if self.vad_model is not None:
