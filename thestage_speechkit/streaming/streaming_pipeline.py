@@ -400,8 +400,6 @@ class LocalWhisperBackend(TranscriptionBackend):
             "do_sample": False,
             "max_new_tokens": max_new_tokens,
             "language": self.language,
-            
-            "compression_ratio_threshold": 1.3
         }
 
         result: Dict[str, Any] = self.asr_pipeline(
