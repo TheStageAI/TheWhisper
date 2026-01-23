@@ -470,7 +470,7 @@ class StreamingPipeline:
         # VAD parameters
         use_vad: bool = True,
         vad_threshold: float = 0.1,
-        vad_no_speech_chunks: int = 5,
+        vad_no_speech_chunks: int = 1,
         vad_prepend_chunks: int = 3,
     ):
         self.sample_rate: int = sample_rate
@@ -773,10 +773,10 @@ class StreamingPipeline:
 
         if len(self.current_audio_buffer) > max_allowed_size:
             need_to_trim = True
-        elif len(self.current_audio_buffer) > maybe_trim_size:
-           maybe_trim = True
+        # elif len(self.current_audio_buffer) > maybe_trim_size:
+        #    maybe_trim = True
 
-        if self._prev_speech_mode and not self._in_speech_mode and len(self.current_audio_buffer) > 1 * self.sample_rate:
+        if self._prev_speech_mode and not self._in_speech_mode and len(self.current_audio_buffer) > 4 * self.sample_rate:
             need_to_trim = True
             truncation_time = self.current_time # or use history last word end time
 
