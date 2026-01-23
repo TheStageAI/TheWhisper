@@ -1,11 +1,3 @@
---extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple
-
-thestage-elastic-models[nvidia]==0.1.5
-
-torch==2.9.0
-torchvision==0.24.0
-torchaudio==2.9.0
-transformers==4.52.3
 tqdm
 accelerate
 imageio
@@ -16,8 +8,3 @@ datasets==3.6.0
 evaluate
 whisper_normalizer
 jiwer
-
-tensorrt==10.13.0.35
-tensorrt-cu12==10.13.0.35
-tensorrt-cu12-bindings==10.13.0.35
-tensorrt-cu12-libs==10.13.0.35
