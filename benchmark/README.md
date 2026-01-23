@@ -1,6 +1,7 @@
 # Table of Contents
 
 - [Quality benchmarks](#quality-benchmarks)
+  - [Run evaluation](#run-evaluation)
 - [Performance benchmarks](#performance-benchmarks)
 
 # Quality benchmarks
@@ -8,7 +9,6 @@
 For evaluation, we used datasets from [Open ASR Leaderboard](https://github.com/huggingface/open_asr_leaderboard#evaluate-a-model).
 For all evaluations we used following settings:
 
-- **Adaptive chunk length**: Each sample is processed with the appropriate chunk length based on its duration, ensuring optimal efficiency without quality loss
 - **Metrics**: Word Error Rate (WER)
 - **Text normalization**: Standard Whisper normalizer (lowercase, remove punctuation for WER)
 - **Decoding**: `num_beams=1` with `do_sample=False`
@@ -64,6 +64,25 @@ We evaluate robustness to background noise by testing across different Signal-to
 | 5 | 8.20   | 8.23 |
 | 0 | 11.10 | 11.66 |
 
+## Run evaluation
+
+To reproduce metrics on open asr (english and multilingual) run following commands:
+
+```bash
+pip install -r benchmark/requirements.txt
+```
+
+```bash
+python run_evaluation.py \
+    --model_name TheStageAI/thewhisper-large-v3-turbo \
+    --mode XL \
+    --task open_asr \
+    --batch_size 64 \
+```
+
+Here ``--mode XL`` means that fp16 model engines will be used. Use ``--mode S`` for evaluation of int8 quantized model version.
+
+Set ``--task multilingual_open_asr`` for multilingual evaluation.
 
 ---
 
