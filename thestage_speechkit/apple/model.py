@@ -101,6 +101,8 @@ class BaseEncoder(torch.nn.Module):
 
 class ANEEncoder(BaseEncoder):
     def __init__(self, encoder_path: str):
+        print("Loading model components on Apple Neural Engine. May take about 30-60 seconds.")
+
         if encoder_path.endswith(".mlmodelc"):
             encoder = ct.models.CompiledMLModel(
                 encoder_path, compute_units=ct.ComputeUnit.CPU_AND_NE

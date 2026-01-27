@@ -60,6 +60,7 @@ streaming_model = StreamingPipeline(
     platform=args.platform,
     language=args.language,
     min_process_chunk_s=args.process_window,
+    # revision='1b649dccd5944ef5a38ade18cae1c2d5ead144f2'
 )
 
 if args.use_mic:
@@ -67,8 +68,10 @@ if args.use_mic:
 else:
     audio_stream = FileStream(args.audio_file, step_size_s=args.step_size)
 
-output_stream = StdoutStream()
 full_approved_text = ""
+green = "\033[92m"
+yellow = "\033[93m"
+reset = "\033[0m"
 
 while True:
     chunk = audio_stream.next_chunk()
@@ -80,9 +83,6 @@ while True:
         full_approved_text += approved_text
         # Print approved text in green and assumption text in yellow
         if approved_text or assumption_text:
-            green = "\033[92m"
-            yellow = "\033[93m"
-            reset = "\033[0m"
             output = ""
             if full_approved_text:
                 output += f"{green}{full_approved_text}{reset}"
@@ -95,4 +95,3 @@ while True:
         break
 
 audio_stream.close()
-output_stream.close()
