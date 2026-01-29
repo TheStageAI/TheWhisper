@@ -5,7 +5,7 @@ import torch
 import transformers
 import argparse
 from transformers import WhisperForConditionalGeneration as HFWhisperForConditionalGeneration
-from transformers import WhisperProcessor, pipeline
+from transformers import WhisperProcessor, pipeline, AutoTokenizer
 
 from data_utils import (
     open_asr_en_tasks, 
