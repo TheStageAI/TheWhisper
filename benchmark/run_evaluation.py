@@ -46,11 +46,17 @@ def get_generator(args):
 
     if args.mode != "eager":
         processor = WhisperProcessor.from_pretrained(
-            args.model_name, cache_dir=args.cache_dir, chunk_length=chunk_length
+            args.model_name, cache_dir=args.cache_dir, chunk_length=args.chunk_length,
+            tokenizer=AutoTokenizer.from_pretrained(
+                args.model_name, cache_dir=args.cache_dir, use_fast=True
+            )
         )
     else:
         processor = WhisperProcessor.from_pretrained(
-            args.model_name, cache_dir=args.cache_dir
+            args.model_name, cache_dir=args.cache_dir,
+            tokenizer=AutoTokenizer.from_pretrained(
+                args.model_name, cache_dir=args.cache_dir, use_fast=True
+            )
         )
 
     generator = pipeline(
