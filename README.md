@@ -116,7 +116,7 @@ thestage config set --api-token <YOUR_API_TOKEN>
 
 ### Nvidia GPU Requirements
 
-- **Supported GPUs:** RTX 4090, RTX 5090, L40s, H100, Jetson-Thor
+- **Supported GPUs:** RTX 4090, RTX 5090, L40s, H100, A100, Jetson-Thor
 - **Operating System:** Ubuntu 20.04+
 - **Minimum RAM:** 2.5 GB (5 GB recommended for large-v3 model)
 - **CUDA Version:** 11.8 or higher
