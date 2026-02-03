@@ -252,8 +252,8 @@ For comprehensive quality and performance benchmarks, including comparisons with
 <img width="1547" height="531" alt="vanilla whisper (1)" src="https://github.com/user-attachments/assets/f0c86e58-d834-4ac7-a06b-df3a7ae3e9e9" />
 <img width="1547" height="458" alt="TheStage AI Whisper (1)" src="https://github.com/user-attachments/assets/17fb45a3-b33d-4c83-b843-69b0f0aa3f65" />
 
-<img width="1547" height="531" alt="Open ASR Leaderboard Benchmark" src="https://cdn.thestage.ai/production/cms_file_upload/1768127846-afbe7f94-4109-4685-9946-b1fa618bc04a/Open ASR Leaderboard Benchmark (6).png" />
-<img width="1547" height="531" alt="Multilingual Benchmark" src="https://cdn.thestage.ai/production/cms_file_upload/1768127897-e1bf74d8-b8cc-4c90-9121-607f6a37aeda/Multilingual Benchmark.png" />
+<img width="1547" height="531" alt="Open ASR Leaderboard Benchmark" src="https://cdn.thestage.ai/production/cms_file_upload/1770139173-58663708-4644-44a7-8225-763c33a2c95b/SOTA on Multilingual Open ASR benchmark.png" />
+<img width="1547" height="531" alt="Multilingual Benchmark" src="https://cdn.thestage.ai/production/cms_file_upload/1770139254-33d3c626-158f-42ec-a7f2-3a4bbe44b382/Open ASR Leaderboard Benchmark.png" />
 
 ---
 
