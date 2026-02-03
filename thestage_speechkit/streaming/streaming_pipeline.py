@@ -204,7 +204,6 @@ class RemoteAPIBackend(TranscriptionBackend):
         )
 
 
-
 class RemoteAPITimestampsBackend(RemoteAPIBackend):
     """
     Backend that uses Triton JSON with metadata.chunks timestamps.
@@ -331,7 +330,8 @@ class RemoteAPITimestampsBackend(RemoteAPIBackend):
         text_from_chunks = " ".join(
             str(c.get("text", "")).strip() for c in chunks
         )
-        if text_from_chunks and _compression_ratio(text_from_chunks) > self.GIBBERISH_THRESHOLD:
+        if (text_from_chunks and
+                _compression_ratio(text_from_chunks) > self.GIBBERISH_THRESHOLD):
             return []
 
         return self._parse_chunks_to_tokens(chunks, audio_duration, buffer_start_time)
@@ -477,7 +477,7 @@ class StreamingPipeline:
         self.chunk_length_s: float = chunk_length_s
         self.min_process_chunk_s: float = min_process_chunk_s
         self.window_size: float = chunk_length_s - 1
-        
+
         self._pending_chunk: Optional[np.ndarray] = None
 
         # Choose backend via factory or use injected one
@@ -515,18 +515,24 @@ class StreamingPipeline:
         self.use_vad: bool = use_vad
         self.vad_threshold: float = vad_threshold
         self.vad_model: Optional[Any] = None
-        
+
         # VAD speech detection state
-        self._vad_history: List[bool] = []  # Recent VAD results (True=speech, False=no speech)
-        self._recent_chunks: List[np.ndarray] = []  # Recent small chunks for prepending
-        self._in_speech_mode: bool = False  # Whether we're currently collecting speech
-        self._no_speech_threshold: int = vad_no_speech_chunks  # Consecutive no-speech chunks to stop
-        self._prepend_chunks: int = vad_prepend_chunks  # Chunks to prepend when speech starts
-        self._vad_buffer: np.ndarray = np.array([], dtype=np.float32)  # Buffer for 512-sample VAD chunks
+        # Recent VAD results (True=speech, False=no speech)
+        self._vad_history: List[bool] = []
+        # Recent small chunks for prepending
+        self._recent_chunks: List[np.ndarray] = []
+        # Whether we're currently collecting speech
+        self._in_speech_mode: bool = False
+        # Consecutive no-speech chunks to stop
+        self._no_speech_threshold: int = vad_no_speech_chunks
+        # Chunks to prepend when speech starts
+        self._prepend_chunks: int = vad_prepend_chunks
+        # Buffer for 512-sample VAD chunks
+        self._vad_buffer: np.ndarray = np.array([], dtype=np.float32)
 
         if use_vad:
             self.vad_model, _ = torch.hub.load(
-                repo_or_dir='snakers4/silero-vad', 
+                repo_or_dir='snakers4/silero-vad',
                 model='silero_vad',
                 trust_repo=True,
             )
@@ -583,36 +589,36 @@ class StreamingPipeline:
     def _run_vad_sequential(self, audio: np.ndarray) -> bool:
         """
         Run VAD sequentially on 512-sample chunks.
-        
+
         The Silero VAD model expects exactly 512 samples at 16kHz and maintains
         internal state between calls for better context tracking.
-        
+
         Args:
             audio: Audio samples to process
-            
+
         Returns:
             True if speech was detected in any 512-sample chunk, False otherwise
         """
         if self.vad_model is None:
             return True
-        
+
         # Add new audio to the buffer
         self._vad_buffer = np.concatenate([self._vad_buffer, audio.astype(np.float32)])
-        
+
         has_speech = False
-        
+
         # Process all complete 512-sample chunks
         while len(self._vad_buffer) >= 512:
             chunk_512 = self._vad_buffer[:512]
             self._vad_buffer = self._vad_buffer[512:]
-            
+
             # Run VAD on this 512-sample chunk
             chunk_tensor = torch.from_numpy(chunk_512)
             prob = self.vad_model(chunk_tensor, self.sample_rate).item()
-            
+
             if prob > self.vad_threshold:
                 has_speech = True
-        
+
         return has_speech
 
     def __call__(
@@ -634,13 +640,13 @@ class StreamingPipeline:
     def add_new_chunk(self, chunk: np.ndarray) -> None:
         """
         Add a new *small* audio chunk (~0.05s) to the pipeline.
-        
+
         Uses VAD to intelligently filter silence:
         - Tracks speech/no-speech history for each small chunk
         - Only accumulates audio during speech segments
         - Prepends recent chunks when speech starts (to avoid cutting beginning)
         - Pushes accumulated audio when speech ends or buffer reaches threshold
-        
+
         This ensures the transcription pipeline doesn't receive long silence intervals.
         """
         if chunk is None or len(chunk) == 0:
@@ -653,17 +659,17 @@ class StreamingPipeline:
 
         # Run VAD sequentially on 512-sample chunks
         chunk_has_speech = self._run_vad_sequential(chunk)
-        
+
         # Store in recent chunks buffer (for prepending when speech starts)
         self._recent_chunks.append(chunk)
         if len(self._recent_chunks) > self._prepend_chunks:
             self._recent_chunks.pop(0)
-        
+
         # Store VAD result in history
         self._vad_history.append(chunk_has_speech)
         if len(self._vad_history) > self._no_speech_threshold:
             self._vad_history.pop(0)
-        
+
         # State machine for speech detection
         if self._in_speech_mode:
             # Currently collecting speech - append chunk to pending buffer
@@ -671,11 +677,11 @@ class StreamingPipeline:
                 self._pending_chunk = chunk
             else:
                 self._pending_chunk = np.concatenate([self._pending_chunk, chunk])
-            
+
             # Check if we should transition to no-speech mode
             # (all recent VAD results are no-speech)
-            if (len(self._vad_history) >= self._no_speech_threshold and 
-                not any(self._vad_history[-self._no_speech_threshold:])):
+            if (len(self._vad_history) >= self._no_speech_threshold and
+                    not any(self._vad_history[-self._no_speech_threshold:])):
                 # Transition: speech -> no-speech
                 self._in_speech_mode = False
                 # Push current pending chunk to queue
@@ -688,21 +694,24 @@ class StreamingPipeline:
             if chunk_has_speech:
                 # Transition: no-speech -> speech
                 self._in_speech_mode = True
-                
+
                 # Prepend recent chunks to capture speech beginning
                 # (exclude current chunk as it will be added separately)
-                prepend_chunks = self._recent_chunks[:-1] if len(self._recent_chunks) > 1 else []
+                if len(self._recent_chunks) > 1:
+                    prepend_chunks = self._recent_chunks[:-1]
+                else:
+                    prepend_chunks = []
                 if prepend_chunks:
                     self._pending_chunk = np.concatenate(prepend_chunks)
                 else:
                     self._pending_chunk = None
-                
+
                 # Add current chunk
                 if self._pending_chunk is None:
                     self._pending_chunk = chunk
                 else:
                     self._pending_chunk = np.concatenate([self._pending_chunk, chunk])
-        
+
         # Check if pending chunk should be pushed due to reaching size threshold
         if self._pending_chunk is not None:
             pending_duration = len(self._pending_chunk) / self.sample_rate
@@ -767,9 +776,11 @@ class StreamingPipeline:
             self.history.append(new_words)
 
         # Ensure the buffer does not grow unbounded
-        max_allowed_size = (self.window_size - self.min_process_chunk_s) * self.sample_rate
+        max_allowed_size = (
+            (self.window_size - self.min_process_chunk_s) * self.sample_rate
+        )
         maybe_trim_size = (self.window_size // 2) * self.sample_rate
-        
+
         need_to_trim = False
         maybe_trim = False
         truncation_time = None
@@ -779,27 +790,40 @@ class StreamingPipeline:
         # elif len(self.current_audio_buffer) > maybe_trim_size:
         #    maybe_trim = True
 
-        if self._prev_speech_mode and not self._in_speech_mode and len(self.current_audio_buffer) > 6 * self.sample_rate:
+        if (self._prev_speech_mode and not self._in_speech_mode and
+                len(self.current_audio_buffer) > 6 * self.sample_rate):
             need_to_trim = True
-            truncation_time = self.current_time # or use history last word end time
+            truncation_time = self.current_time  # or use history last word end time
 
         self._prev_speech_mode = self._in_speech_mode
 
         if need_to_trim or maybe_trim:
             final_text = self._extract_final_text()
             if truncation_time is None:
-                truncation_time = self._get_truncation_time(final_text, need_to_trim)
+                truncation_time = self._get_truncation_time(
+                    final_text, need_to_trim
+                )
 
             if truncation_time is not None:
                 self._trim_audio_buffer(truncation_time)
-                commited_words = [word for word in final_text if word['start'] < truncation_time]
-                uncommited_words = [word for word in final_text if word['start'] >= truncation_time]
+                commited_words = [
+                    word for word in final_text
+                    if word['start'] < truncation_time
+                ]
+                uncommited_words = [
+                    word for word in final_text
+                    if word['start'] >= truncation_time
+                ]
                 if len(commited_words) > 0:
-                    self._last_committed_word = commited_words[-1]['text'].strip()
+                    self._last_committed_word = (
+                        commited_words[-1]['text'].strip()
+                    )
 
         return commited_words, uncommited_words
 
-    def _postprocess_transcribtions(self, tokens: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _postprocess_transcribtions(
+            self, tokens: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         # Fuse tokens that are only spaces and dots into the previous token
         filtered_tokens = []
         for i, token in enumerate(tokens):
@@ -814,20 +838,21 @@ class StreamingPipeline:
                 # Skip adding this token to filtered_tokens
             else:
                 filtered_tokens.append(token)
-        
+
         # Add space to tokens that don't start with a space
         for token in filtered_tokens:
             if token["text"] and not token["text"].startswith(" "):
                 token["text"] = " " + token["text"]
             if token["text"].startswith(' -'):
                 token["text"] = token["text"].replace(' -', '-')
-        
+
         for token in filtered_tokens:
             token['text'] = token['text'].replace('gonNA', 'gonna')
             token['text'] = token['text'].replace('gotTA', 'gotta')
             token['text'] = token['text'].replace('wanNA', 'wanna')
 
-        if len(filtered_tokens) == 1 and filtered_tokens[0]['text'].strip() in ['The.', 'The', 'I.']:
+        if (len(filtered_tokens) == 1 and
+                filtered_tokens[0]['text'].strip() in ['The.', 'The', 'I.']):
             filtered_tokens = []
 
         if self._last_committed_word is not None and len(filtered_tokens) > 0:
@@ -861,7 +886,7 @@ class StreamingPipeline:
         last_end_of_sentence_index = None
         last_comma_index = None
         max_pause_index = None
-        
+
         max_pause_duration = 0.0
         prev_word_end = 0.0
         last_word = len(final_words) - 1
@@ -869,37 +894,43 @@ class StreamingPipeline:
         for i, word in enumerate(final_words):
             text = word['text'].strip()
             timestamp = word['end']
-            # if (text.endswith('.') or text.endswith('?') or text.endswith('!')) and i != last_word:
-            if (text.endswith('.') or text.endswith('?') or text.endswith('!')) and timestamp < self.current_time - 2.:
+            # Check for sentence ending punctuation
+            ends_sentence = (
+                text.endswith('.') or text.endswith('?') or text.endswith('!')
+            )
+            if ends_sentence and timestamp < self.current_time - 2.:
                 last_end_of_sentence_index = i
-            
-            # if (text.endswith(',') or text.endswith(';') or text.endswith(':')) and i != last_word:
-            if (text.endswith(',') or text.endswith(';') or text.endswith(':')) and timestamp < self.current_time - 2.:
+
+            # Check for phrase ending punctuation
+            ends_phrase = (
+                text.endswith(',') or text.endswith(';') or text.endswith(':')
+            )
+            if ends_phrase and timestamp < self.current_time - 2.:
                 last_comma_index = i
-            
+
             if word['start'] - prev_word_end >= max_pause_duration:
                 max_pause_duration = word['start'] - prev_word_end
                 max_pause_index = i - 1
-            
+
             prev_word_end = word['end']
 
         out = None
 
         if last_end_of_sentence_index:
             out = final_words[last_end_of_sentence_index]['end']
-        
+
         elif last_comma_index:
             out = final_words[last_comma_index]['end']
-        
+
         elif max_pause_index is not None and max_pause_index >= 0 and need_to_trim:
             out = final_words[max_pause_index]['end']
-        
+
         elif len(final_words) >= 2 and need_to_trim:
             out = final_words[-2]['end']
-        
+
         elif len(final_words) == 1 and need_to_trim:
             out = final_words[0]['end']
-        
+
         elif need_to_trim:
             out = self.current_time - self.min_process_chunk_s * 2
 
@@ -945,13 +976,13 @@ class StreamingPipeline:
         self.need_to_process = False
         self.history = []
         self._last_committed_word = None
-        
+
         # Reset VAD state
         self._vad_history = []
         self._recent_chunks = []
         self._in_speech_mode = False
         self._vad_buffer = np.array([], dtype=np.float32)
-        
+
         # Reset VAD model state if it exists
         if self.vad_model is not None:
             self.vad_model.reset_states()
