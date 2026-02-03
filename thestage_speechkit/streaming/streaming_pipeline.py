@@ -751,6 +751,9 @@ class StreamingPipeline:
         else:
             self.current_audio_buffer = np.concatenate([self.current_audio_buffer, chunk])
 
+        if len(self.current_audio_buffer) < 2. * self.sample_rate:
+            return [], []
+
         commited_words = []
         uncommited_words = []
 
@@ -776,7 +779,7 @@ class StreamingPipeline:
         # elif len(self.current_audio_buffer) > maybe_trim_size:
         #    maybe_trim = True
 
-        if self._prev_speech_mode and not self._in_speech_mode and len(self.current_audio_buffer) > 4 * self.sample_rate:
+        if self._prev_speech_mode and not self._in_speech_mode and len(self.current_audio_buffer) > 6 * self.sample_rate:
             need_to_trim = True
             truncation_time = self.current_time # or use history last word end time
 
@@ -867,11 +870,11 @@ class StreamingPipeline:
             text = word['text'].strip()
             timestamp = word['end']
             # if (text.endswith('.') or text.endswith('?') or text.endswith('!')) and i != last_word:
-            if (text.endswith('.') or text.endswith('?') or text.endswith('!')) and timestamp < self.current_time - 1.:
+            if (text.endswith('.') or text.endswith('?') or text.endswith('!')) and timestamp < self.current_time - 2.:
                 last_end_of_sentence_index = i
             
             # if (text.endswith(',') or text.endswith(';') or text.endswith(':')) and i != last_word:
-            if (text.endswith(',') or text.endswith(';') or text.endswith(':')) and timestamp < self.current_time - 1.:
+            if (text.endswith(',') or text.endswith(';') or text.endswith(':')) and timestamp < self.current_time - 2.:
                 last_comma_index = i
             
             if word['start'] - prev_word_end >= max_pause_duration:
