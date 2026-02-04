@@ -52,7 +52,7 @@ It is optimized for **low-latency**, **low power usage**, and **scalable** strea
 - Simple Python API, examples and [tutorial](https://app.thestage.ai/blog/Building-a-macOS-Note-Taker-app-on-Electron-with-TheWhisper?id=6) of deployment for MacOS desktop app with Electron and ReactJS
 
 <img width="1547" height="877" alt="apple m2 whisper (4)" src="https://github.com/user-attachments/assets/9404cdc0-b120-4ba1-9c65-4d42089ba623" />
-<img width="1547" height="877" alt="nvidia l40s (2)" src="https://cdn.thestage.ai/production/cms_file_upload/1770138376-39a1164f-cf44-45d2-ad2f-22dc079fe92f/NVIDIA, RTX-5090 (2).png" />
+<img width="1547" height="877" alt="nvidia l40s (2)" src="https://cdn.thestage.ai/production/cms_file_upload/1770235593-c873f699-07af-497b-ac77-2f5b08e3f767/NVIDIA, H100 (2).png" />
 <!-- <img width="1547" height="877" alt="nvidia l40s (2)" src="https://github.com/user-attachments/assets/7c318bb6-cbd6-42ce-b42f-096cd7a1070c" /> -->
 
 For comprehensive performance and quality benchmarks see [benchmark/](benchmark/README.md).
