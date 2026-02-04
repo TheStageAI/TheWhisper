@@ -109,7 +109,6 @@ Measurements:
 | XL            | 0.0115  | 152.07       |
 | torch_compile | 0.0464 | 81.15        |
 | faster_whisper| 2.2240 | 118.18       |
-| whisperx      | 4.7130 | 132.42       |
 
 **Batch Size: 32**
 
@@ -119,7 +118,6 @@ Measurements:
 | XL            | 0.3101  | 518.06       |
 | torch_compile | 1.508   | 345.25       |
 | faster_whisper| 2.2234  | 174.27       |
-| whisperx      | 2.5988  | 254.64       |
 
 
 ---
@@ -134,7 +132,6 @@ Measurements:
 | XL            | 0.0093  | 164.61       |
 | torch_compile | 0.0303  | 108.20       |
 | faster_whisper| 1.81685 | 135.92       |
-| whisperx      | 4.09490 | 151.23       |
 
 **Batch Size: 64**
 
@@ -142,8 +139,8 @@ Measurements:
 |:--------------|-------:|-----:|
 | S             | 0.3175  | 2016.18       |
 | XL            | 0.3206  | 1975.49       |
-| torch_compile | 1.0602  |  637.36 |
-| faster_whisper| 2.187   |  200.09 |
+| torch_compile | 0.5993  |  637.36 |
+| faster_whisper| 1.825   |  280.09 |
 
 
 ---
@@ -188,8 +185,6 @@ Measurements:
 | XL            | 0.3791  | 1461.42 |
 | torch_compile | 1.0602  |  637.36 |
 | faster_whisper| 2.187   |  200.09 |
-
-
 
 ---
 
