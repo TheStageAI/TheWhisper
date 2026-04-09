@@ -5,7 +5,10 @@
 [![NVIDIA](https://img.shields.io/badge/NVIDIA-GPU-green.svg)](#usage-deployment)
 [![Apple Silicon](https://img.shields.io/badge/Apple-Silicon-black.svg)](#usage-deployment)
 
-<img width="1500" height="440" alt="the whisper (6)" src="https://github.com/user-attachments/assets/a86c98a7-c587-40cb-9ed3-d3b5ba5e76f2" />
+
+<img width="1420" height="939" alt="Frame 339234 (2)" src="https://github.com/user-attachments/assets/e4549998-9d83-4980-bf53-cd21d40e9bce" />
+
+
 
 ## 🚀 Overview
 
