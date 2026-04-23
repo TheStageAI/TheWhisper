@@ -225,19 +225,20 @@ def _inject_css():
     .aligned-seq { display:flex; flex-wrap:wrap; align-items:flex-start; gap:0.35rem 0.5rem; }
     .aligned-tok { display:inline-flex; flex-direction:column; align-items:center; }
     .aligned-top, .aligned-bottom { white-space:nowrap; min-height:1.3rem; }
-    .aligned-top-plain { color:#1f1f1f; }
+    .aligned-top-plain { color:inherit; }
     .aligned-top-sub, .aligned-bottom-sub { color:#067647; font-weight:600; }
     .aligned-top-ins { color:#0b63b6; font-weight:600; }
     .aligned-bottom-del { color:#b42318; font-weight:600; }
     .aligned-empty { visibility:hidden; }
-    .detail-card { border:1px solid rgba(0,0,0,0.08); border-radius:0.75rem;
-                   padding:0.85rem 1rem; margin-bottom:0.75rem; background:rgba(255,255,255,0.65); }
-    .mini-meta { color:#666; font-size:0.92rem; margin-bottom:0.6rem; }
+    .detail-card { border:1px solid rgba(128,128,128,0.18); border-radius:0.75rem;
+                   padding:0.85rem 1rem; margin-bottom:0.75rem;
+                   background:rgba(127,127,127,0.08); color:inherit; }
+    .mini-meta { color:inherit; opacity:0.65; font-size:0.92rem; margin-bottom:0.6rem; }
     .diff-line { line-height:1.9; word-wrap:break-word; }
     .llm-marker { width:0.72rem; height:0.72rem; border-radius:0.18rem;
                   display:inline-block; border:1px solid rgba(0,0,0,0.08); margin-right:0.15rem; }
     .llm-badge { display:inline-flex; align-items:center; border-radius:999px;
-                 padding:0.16rem 0.55rem; font-size:0.84rem; font-weight:600; color:white; margin:0.1rem; }
+                 padding:0.13rem 0.44rem; font-size:0.67rem; font-weight:600; color:white; margin:0.08rem; }
     .hyp-text { line-height:2.2; font-size:0.95rem; }
     .err-wrong { background:#fecaca; color:#991b1b; text-decoration:line-through;
                  border-radius:0.2rem; padding:0.1rem 0.2rem; }
@@ -490,7 +491,8 @@ def render_examples(all_results: list[EvalResult], sel_models: list[str], sel_ta
     avail_cats = [c for c in LLM_CATEGORY_ORDER if c in all_cats]
 
     filter_cats = st.multiselect("Filter by LLM category", avail_cats,
-                                 format_func=_cat_label, key="filter_cats")
+                                 format_func=_cat_label, key="filter_cats",
+                                 placeholder="Choose categories")
 
     # Build rows
     rows: list[dict] = []

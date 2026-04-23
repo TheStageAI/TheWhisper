@@ -16,21 +16,23 @@ the same local Gemma.
 import os
 
 # ── Analyzer LM (error categorization) ─────────────────────────
-ANALYZER_BASE_URL = "http://89.169.122.177:8000/v1"
+# Default assumes a local OpenAI-compatible server (e.g. vLLM on port 8000).
+# Replace with the address of any OpenAI-compatible endpoint you want to use.
+ANALYZER_BASE_URL = "http://localhost:8000/v1"
 ANALYZER_MODEL = "google/gemma-4-26B-A4B-it"
 ANALYZER_TEMPERATURE = 0.0
 ANALYZER_MAX_TOKENS = 1024
 ANALYSIS_THREADS = 32
 
 # ── Task LM (optimization + inference) ─────────────────────────
-TASK_LM_BASE_URL = "http://89.169.122.177:8000/v1"
+TASK_LM_BASE_URL = "http://localhost:8000/v1"
 TASK_LM_MODEL = "google/gemma-4-26B-A4B-it"
 TASK_LM_TEMPERATURE = 0.0
 # Short ASR corrections — a smaller cap speeds up optimization / inference.
 TASK_LM_MAX_TOKENS = 512
 
 # ── Proposer LM (MIPROv2 instruction candidates) ───────────────
-PROPOSER_BASE_URL = "http://89.169.122.177:8000/v1"
+PROPOSER_BASE_URL = "http://localhost:8000/v1"
 PROPOSER_MODEL = "google/gemma-4-26B-A4B-it"
 PROPOSER_TEMPERATURE = 1.0
 # Proposer output is a full instruction — can be multi-paragraph.
