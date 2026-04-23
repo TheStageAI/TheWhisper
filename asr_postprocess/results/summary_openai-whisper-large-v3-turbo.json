@@ -1,0 +1,88 @@
+{
+  "fleurs_de_test": {
+    "task": "fleurs_de_test",
+    "categories": {
+      "SPURIOUS_INSERTION": 30,
+      "MORPHOLOGICAL": 119,
+      "PHONETIC_SPELLING": 181,
+      "OMISSION": 41,
+      "SEMANTIC_CHANGE": 78,
+      "NAMED_ENTITY_OR_RARE": 51,
+      "FUNCTION_WORD": 15,
+      "CLITIC_MARKER": 3,
+      "NUMBER_WORD": 2
+    }
+  },
+  "fleurs_en_test": {
+    "task": "fleurs_en_test",
+    "categories": {
+      "OMISSION": 58,
+      "PHONETIC_SPELLING": 137,
+      "NAMED_ENTITY_OR_RARE": 49,
+      "SEMANTIC_CHANGE": 107,
+      "MORPHOLOGICAL": 61,
+      "FUNCTION_WORD": 34,
+      "NUMBER_WORD": 2,
+      "SPURIOUS_INSERTION": 41,
+      "CLITIC_MARKER": 10
+    }
+  },
+  "fleurs_es_test": {
+    "task": "fleurs_es_test",
+    "categories": {
+      "SPURIOUS_INSERTION": 38,
+      "PHONETIC_SPELLING": 185,
+      "OMISSION": 68,
+      "FUNCTION_WORD": 23,
+      "SEMANTIC_CHANGE": 60,
+      "MORPHOLOGICAL": 77,
+      "NAMED_ENTITY_OR_RARE": 54,
+      "CLITIC_MARKER": 2,
+      "OTHER": 1,
+      "NUMBER_WORD": 7
+    }
+  },
+  "fleurs_fr_test": {
+    "task": "fleurs_fr_test",
+    "categories": {
+      "SEMANTIC_CHANGE": 121,
+      "MORPHOLOGICAL": 179,
+      "PHONETIC_SPELLING": 134,
+      "OMISSION": 46,
+      "SPURIOUS_INSERTION": 25,
+      "FUNCTION_WORD": 43,
+      "NAMED_ENTITY_OR_RARE": 55,
+      "NUMBER_WORD": 3,
+      "CLITIC_MARKER": 18,
+      "OTHER": 3
+    }
+  },
+  "fleurs_it_test": {
+    "task": "fleurs_it_test",
+    "categories": {
+      "MORPHOLOGICAL": 53,
+      "SEMANTIC_CHANGE": 48,
+      "PHONETIC_SPELLING": 150,
+      "FUNCTION_WORD": 19,
+      "NAMED_ENTITY_OR_RARE": 38,
+      "SPURIOUS_INSERTION": 27,
+      "CLITIC_MARKER": 13,
+      "NUMBER_WORD": 7,
+      "OMISSION": 26
+    }
+  },
+  "fleurs_pt_test": {
+    "task": "fleurs_pt_test",
+    "categories": {
+      "NAMED_ENTITY_OR_RARE": 61,
+      "PHONETIC_SPELLING": 201,
+      "MORPHOLOGICAL": 90,
+      "SEMANTIC_CHANGE": 83,
+      "OMISSION": 48,
+      "CLITIC_MARKER": 9,
+      "FUNCTION_WORD": 37,
+      "SPURIOUS_INSERTION": 65,
+      "NUMBER_WORD": 6
+    }
+  }
+}

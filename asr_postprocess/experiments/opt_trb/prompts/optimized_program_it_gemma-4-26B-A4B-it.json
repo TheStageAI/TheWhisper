@@ -1,0 +1,45 @@
+{
+  "traces": [],
+  "train": [],
+  "demos": [
+    {
+      "augmented": true,
+      "hypotheses": " Da quel momento a Decoia è presso il tribunale dello sceriffo di Edimburgo con l'accusa di aver ucciso il suo stesso figlio.",
+      "corrected_transcription": "Da quel momento a Dublino è presso il tribunale dello sceriffo di Edimburgo con l'accusa di aver ucciso il suo stesso figlio."
+    },
+    {
+      "augmented": true,
+      "hypotheses": " Il Congresso Nazionale del Brasile ha dibattuto della legalizzazione per 10 anni e questo tipo di matrimoni civili sono al momento legali solo nel Rio Grande do Sol.",
+      "corrected_transcription": "Il Congresso Nazionale del Brasile ha dibattuto della legalizzazione per 10 anni e questo tipo di matrimoni civili sono al momento legali solo nel Rio Grande do Sul."
+    },
+    {
+      "hypotheses": " Il quartiere dei canali, in olandese Grasgordel, è il celebre quartiere risalente al XVII secolo che circonda il Binnenstad di Amsterdam.",
+      "reference": "Il quartiere dei canali (in olandese Grachtengordel) è il celebre quartiere risalente al XVII secolo che circonda il Binnenstad di Amsterdam."
+    },
+    {
+      "hypotheses": " Passare un qualsiasi periodo di tempo intrappolati sulle montagne russe è a dir poco sgradevole e per far scendere la prima persona dalla giostra è servita un'ora almeno.",
+      "reference": "Passare un qualsiasi periodo di tempo intrappolati sulle montagne russe è a dir poco sgradevole, e per far scendere la prima persona dalla giostra è servita un'ora almeno\"."
+    }
+  ],
+  "signature": {
+    "instructions": "You are an expert ASR (Automated Speech Recognition) post-processor specializing in Italian journalistic text. Your task is to refine imperfect transcriptions into accurate, professional prose.\n\nInput: A set of \"Hypotheses\" representing raw, potentially erroneous speech-to-text outputs.\n\nTask: Identify and correct phonetic errors, misspellings, and misidentified proper nouns (e.g., correcting \"Decoia\" to \"Dublino\") to produce a \"Corrected Transcription.\"\n\nRules:\n1. **Preserve Meaning and Structure:** Do not change, delete, or reorder real words that are already correct. Do not alter the grammatical structure or semantic meaning.\n2. **Target Errors Only:** Focus exclusively on correcting \"garbled\" tokens, phonetic approximations, or spelling mistakes caused by the ASR process.\n3. **Maintain Fidelity:** Leave punctuation, capitalization, and numbers exactly as they appear in the input, unless they are part of a clear error.\n4. **Conservative Correction:** If a token is ambiguous or you are unsure if it is an error, leave it exactly as it is in the input.\n5. **Output Format:** Provide only the corrected text. Do not include explanations or labels.",
+    "fields": [
+      {
+        "prefix": "Hypotheses:",
+        "description": "ASR hypothesis transcription(s) of the audio, one per line"
+      },
+      {
+        "prefix": "Corrected Transcription:",
+        "description": "The corrected transcription text only"
+      }
+    ]
+  },
+  "lm": null,
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.10",
+      "dspy": "3.1.3",
+      "cloudpickle": "3.1"
+    }
+  }
+}

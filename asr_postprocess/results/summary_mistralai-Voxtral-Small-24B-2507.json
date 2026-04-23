@@ -1,0 +1,86 @@
+{
+  "fleurs_de_test": {
+    "task": "fleurs_de_test",
+    "categories": {
+      "PHONETIC_SPELLING": 82,
+      "MORPHOLOGICAL": 83,
+      "OMISSION": 82,
+      "SEMANTIC_CHANGE": 50,
+      "SPURIOUS_INSERTION": 17,
+      "NAMED_ENTITY_OR_RARE": 16,
+      "NUMBER_WORD": 3,
+      "FUNCTION_WORD": 10
+    }
+  },
+  "fleurs_en_test": {
+    "task": "fleurs_en_test",
+    "categories": {
+      "OMISSION": 81,
+      "PHONETIC_SPELLING": 82,
+      "NAMED_ENTITY_OR_RARE": 20,
+      "FUNCTION_WORD": 18,
+      "SEMANTIC_CHANGE": 61,
+      "MORPHOLOGICAL": 52,
+      "SPURIOUS_INSERTION": 36,
+      "CLITIC_MARKER": 8,
+      "UNCLASSIFIED": 1,
+      "NUMBER_WORD": 2
+    }
+  },
+  "fleurs_es_test": {
+    "task": "fleurs_es_test",
+    "categories": {
+      "MORPHOLOGICAL": 69,
+      "SPURIOUS_INSERTION": 27,
+      "PHONETIC_SPELLING": 94,
+      "OMISSION": 113,
+      "SEMANTIC_CHANGE": 54,
+      "FUNCTION_WORD": 22,
+      "NAMED_ENTITY_OR_RARE": 25,
+      "OTHER": 1,
+      "NUMBER_WORD": 3
+    }
+  },
+  "fleurs_fr_test": {
+    "task": "fleurs_fr_test",
+    "categories": {
+      "SEMANTIC_CHANGE": 58,
+      "MORPHOLOGICAL": 129,
+      "SPURIOUS_INSERTION": 14,
+      "OMISSION": 79,
+      "FUNCTION_WORD": 38,
+      "NAMED_ENTITY_OR_RARE": 22,
+      "PHONETIC_SPELLING": 52,
+      "CLITIC_MARKER": 12,
+      "NUMBER_WORD": 2
+    }
+  },
+  "fleurs_it_test": {
+    "task": "fleurs_it_test",
+    "categories": {
+      "MORPHOLOGICAL": 29,
+      "FUNCTION_WORD": 11,
+      "SEMANTIC_CHANGE": 30,
+      "NAMED_ENTITY_OR_RARE": 13,
+      "PHONETIC_SPELLING": 44,
+      "CLITIC_MARKER": 9,
+      "NUMBER_WORD": 4,
+      "SPURIOUS_INSERTION": 19,
+      "OMISSION": 73
+    }
+  },
+  "fleurs_pt_test": {
+    "task": "fleurs_pt_test",
+    "categories": {
+      "NAMED_ENTITY_OR_RARE": 24,
+      "PHONETIC_SPELLING": 103,
+      "MORPHOLOGICAL": 75,
+      "SEMANTIC_CHANGE": 62,
+      "OMISSION": 98,
+      "CLITIC_MARKER": 3,
+      "SPURIOUS_INSERTION": 45,
+      "FUNCTION_WORD": 29,
+      "NUMBER_WORD": 3
+    }
+  }
+}

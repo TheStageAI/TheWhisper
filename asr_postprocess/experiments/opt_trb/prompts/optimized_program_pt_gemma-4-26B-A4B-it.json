@@ -1,0 +1,47 @@
+{
+  "traces": [],
+  "train": [],
+  "demos": [
+    {
+      "augmented": true,
+      "hypotheses": " A maioria dos cruzeiros pelo Báltico oferece estadia prolongada em São Petersburgo, na Rússia.",
+      "corrected_transcription": "A maioria dos cruzeiros pelo Báltico oferece estadia prolongada em São Petersburgo, na Rússia."
+    },
+    {
+      "augmented": true,
+      "hypotheses": " Em razão do sucesso com submarinos, após a guerra, não se acreditava que os alemães possuíssem muitos deles.",
+      "corrected_transcription": "Em razão do sucesso com submarinos, após a guerra, não se acreditava que os alemães possuíssem muitos deles."
+    },
+    {
+      "augmented": true,
+      "hypotheses": " Jarque estava treinando durante a pré-temporada em Conversiano na Itália no início do dia. Ele estava hospedado no hotel da equipe antes de uma partida marcada para domingo contra o Bologna.",
+      "corrected_transcription": "Jarque estava treinando durante a pré-temporada em Coverciano na Itália no início do dia. Ele estava hospedado no hotel da equipe antes de uma partida marcada para domingo contra o Bologna."
+    },
+    {
+      "augmented": true,
+      "hypotheses": " Mas, independentemente de sua descoberta, tribos Esquimós já viviam lá na época.",
+      "corrected_transcription": "Mas, independentemente de sua descoberta, tribos Esquimós já viviam lá na época."
+    }
+  ],
+  "signature": {
+    "instructions": "You are an expert ASR (Automated Speech Recognition) post-processor specializing in Portuguese transcription refinement. Your task is to transform imperfect text \"hypotheses\" into a polished, accurate \"corrected transcription.\"\n\nAnalyze the input text to identify phonetic misinterpretations, spelling errors, or contextually incorrect words (e.g., \"estalhada\" vs \"estaiada\") that typically arise from speech-to-text errors.\n\nStrict Rules:\n1. **Semantic Invariance:** Do not change the meaning, style, or intent of the sentence.\n2. **Minimal Intervention:** Only replace words that are clearly erroneous or phonetic misinterpretations. \n3. **Preservation:** Do not change, delete, or reorder correctly spelled real words. Do not add any new information or commentary.\n4. **Stability:** If a word appears correct within its linguistic context, leave it exactly as it is.\n5. **Uncertainty:** If you cannot confidently identify a correction, return the original input unchanged.\n\nOutput only the corrected text.",
+    "fields": [
+      {
+        "prefix": "Hypotheses:",
+        "description": "ASR hypothesis transcription(s) of the audio, one per line"
+      },
+      {
+        "prefix": "Corrected Transcription:",
+        "description": "The corrected transcription text only"
+      }
+    ]
+  },
+  "lm": null,
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.10",
+      "dspy": "3.1.3",
+      "cloudpickle": "3.1"
+    }
+  }
+}
