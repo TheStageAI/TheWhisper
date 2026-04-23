@@ -1,0 +1,89 @@
+{
+  "fleurs_de_test": {
+    "task": "fleurs_de_test",
+    "categories": {
+      "PHONETIC_SPELLING": 180,
+      "SEMANTIC_CHANGE": 71,
+      "NAMED_ENTITY_OR_RARE": 33,
+      "MORPHOLOGICAL": 124,
+      "OMISSION": 41,
+      "SPURIOUS_INSERTION": 28,
+      "NUMBER_WORD": 5,
+      "FUNCTION_WORD": 15,
+      "CLITIC_MARKER": 4
+    }
+  },
+  "fleurs_en_test": {
+    "task": "fleurs_en_test",
+    "categories": {
+      "OMISSION": 55,
+      "PHONETIC_SPELLING": 148,
+      "NAMED_ENTITY_OR_RARE": 49,
+      "SEMANTIC_CHANGE": 97,
+      "MORPHOLOGICAL": 65,
+      "FUNCTION_WORD": 34,
+      "SPURIOUS_INSERTION": 34,
+      "CLITIC_MARKER": 11,
+      "NUMBER_WORD": 2
+    }
+  },
+  "fleurs_es_test": {
+    "task": "fleurs_es_test",
+    "categories": {
+      "SPURIOUS_INSERTION": 38,
+      "PHONETIC_SPELLING": 162,
+      "OMISSION": 78,
+      "MORPHOLOGICAL": 77,
+      "SEMANTIC_CHANGE": 64,
+      "NAMED_ENTITY_OR_RARE": 58,
+      "CLITIC_MARKER": 2,
+      "FUNCTION_WORD": 29,
+      "NUMBER_WORD": 8,
+      "UNCLASSIFIED": 2
+    }
+  },
+  "fleurs_fr_test": {
+    "task": "fleurs_fr_test",
+    "categories": {
+      "SEMANTIC_CHANGE": 105,
+      "PHONETIC_SPELLING": 124,
+      "NAMED_ENTITY_OR_RARE": 48,
+      "OMISSION": 41,
+      "MORPHOLOGICAL": 173,
+      "FUNCTION_WORD": 47,
+      "SPURIOUS_INSERTION": 21,
+      "CLITIC_MARKER": 13,
+      "NUMBER_WORD": 7,
+      "OTHER": 1
+    }
+  },
+  "fleurs_it_test": {
+    "task": "fleurs_it_test",
+    "categories": {
+      "MORPHOLOGICAL": 50,
+      "PHONETIC_SPELLING": 112,
+      "SEMANTIC_CHANGE": 40,
+      "NAMED_ENTITY_OR_RARE": 48,
+      "SPURIOUS_INSERTION": 33,
+      "OMISSION": 44,
+      "CLITIC_MARKER": 19,
+      "NUMBER_WORD": 7,
+      "FUNCTION_WORD": 15
+    }
+  },
+  "fleurs_pt_test": {
+    "task": "fleurs_pt_test",
+    "categories": {
+      "PHONETIC_SPELLING": 208,
+      "SPURIOUS_INSERTION": 65,
+      "SEMANTIC_CHANGE": 94,
+      "MORPHOLOGICAL": 91,
+      "NAMED_ENTITY_OR_RARE": 60,
+      "OMISSION": 50,
+      "CLITIC_MARKER": 5,
+      "FUNCTION_WORD": 33,
+      "NUMBER_WORD": 7,
+      "UNCLASSIFIED": 1
+    }
+  }
+}

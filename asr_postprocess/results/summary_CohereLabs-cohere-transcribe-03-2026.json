@@ -1,0 +1,85 @@
+{
+  "fleurs_de_test": {
+    "task": "fleurs_de_test",
+    "categories": {
+      "PHONETIC_SPELLING": 126,
+      "MORPHOLOGICAL": 103,
+      "OMISSION": 76,
+      "SEMANTIC_CHANGE": 95,
+      "NUMBER_WORD": 6,
+      "FUNCTION_WORD": 16,
+      "NAMED_ENTITY_OR_RARE": 51,
+      "SPURIOUS_INSERTION": 25
+    }
+  },
+  "fleurs_en_test": {
+    "task": "fleurs_en_test",
+    "categories": {
+      "OMISSION": 90,
+      "NUMBER_WORD": 5,
+      "NAMED_ENTITY_OR_RARE": 56,
+      "SPURIOUS_INSERTION": 55,
+      "SEMANTIC_CHANGE": 118,
+      "MORPHOLOGICAL": 81,
+      "PHONETIC_SPELLING": 96,
+      "FUNCTION_WORD": 41,
+      "CLITIC_MARKER": 4
+    }
+  },
+  "fleurs_es_test": {
+    "task": "fleurs_es_test",
+    "categories": {
+      "SEMANTIC_CHANGE": 112,
+      "MORPHOLOGICAL": 83,
+      "SPURIOUS_INSERTION": 49,
+      "OMISSION": 91,
+      "PHONETIC_SPELLING": 124,
+      "FUNCTION_WORD": 40,
+      "NAMED_ENTITY_OR_RARE": 84,
+      "OTHER": 3,
+      "NUMBER_WORD": 6
+    }
+  },
+  "fleurs_fr_test": {
+    "task": "fleurs_fr_test",
+    "categories": {
+      "MORPHOLOGICAL": 153,
+      "OMISSION": 72,
+      "PHONETIC_SPELLING": 83,
+      "SEMANTIC_CHANGE": 94,
+      "FUNCTION_WORD": 45,
+      "SPURIOUS_INSERTION": 27,
+      "NAMED_ENTITY_OR_RARE": 54,
+      "NUMBER_WORD": 6,
+      "CLITIC_MARKER": 11
+    }
+  },
+  "fleurs_it_test": {
+    "task": "fleurs_it_test",
+    "categories": {
+      "SEMANTIC_CHANGE": 59,
+      "MORPHOLOGICAL": 37,
+      "SPURIOUS_INSERTION": 47,
+      "PHONETIC_SPELLING": 95,
+      "NAMED_ENTITY_OR_RARE": 69,
+      "NUMBER_WORD": 5,
+      "OMISSION": 54,
+      "CLITIC_MARKER": 11,
+      "FUNCTION_WORD": 14
+    }
+  },
+  "fleurs_pt_test": {
+    "task": "fleurs_pt_test",
+    "categories": {
+      "PHONETIC_SPELLING": 171,
+      "SEMANTIC_CHANGE": 135,
+      "MORPHOLOGICAL": 102,
+      "OMISSION": 94,
+      "CLITIC_MARKER": 4,
+      "FUNCTION_WORD": 41,
+      "NAMED_ENTITY_OR_RARE": 85,
+      "SPURIOUS_INSERTION": 64,
+      "NUMBER_WORD": 5
+    }
+  }
+}
