@@ -59,6 +59,7 @@ TheWhisper, compiled XL engine, revision `355761f9`, WER %.
 | dataset | `none` (full audio) | `manifest` (Coval cut) |
 |---|---|---|
 | stt-v3 | 3.52 | 3.04 |
+| stt-wildasr-accent | 2.96 | 2.96 |
 | stt-wildasr-clean | 4.30 | 4.16 |
 | stt-wildasr-clipping | 5.93 | 5.79 |
 | stt-wildasr-farfield | 5.63 | 5.67 |
