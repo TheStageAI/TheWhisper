@@ -33,13 +33,16 @@ def get_generator(args):
         ).to("cuda")
         model.generation_config.forced_decoder_ids = None
     else:
-        chunk_length = 20
+        chunk_length = args.chunk_length
         model = WhisperForConditionalGeneration.from_pretrained(
             args.model_name, 
             cache_dir=args.cache_dir,
             chunk_length=chunk_length,
             torch_dtype=dtype,
-            mode=args.mode
+            mode=args.mode,
+            # elastic_models loads the latest tag when revision is None
+            revision=args.revision,
+            elastic_revision=args.revision,
         ).to("cuda")
         model.generation_config.forced_decoder_ids = None
         model.generation_config.cache_implementation = "flexi-static"
@@ -58,6 +61,10 @@ def get_generator(args):
                 args.model_name, cache_dir=args.cache_dir, use_fast=True
             )
         )
+
+    if args.pipeline == "vad":
+        from elastic_models.transformers.pipelines.asr_vad_chunked import TheStageASRPipelineVAD
+        return TheStageASRPipelineVAD(model, processor, torch.device("cuda"))
 
     generator = pipeline(
         "automatic-speech-recognition", 
@@ -80,6 +87,13 @@ def get_tasks(args):
             max_duration_s=args.max_audio_len,
             split="test",
             cache_dir=args.cache_dir,
+        )
+    elif args.task == "coval":
+        from coval.coval_tasks import coval_tasks
+        tasks = coval_tasks(
+            trim=args.coval_trim,
+            min_duration_s=args.min_audio_len,
+            max_duration_s=args.max_audio_len,
         )
     elif args.task == "multilingual_open_asr":
         tasks = open_asr_multilingual_tasks(
@@ -108,6 +122,13 @@ def main(args):
 
 
     def transcribe_fn(audio, generate_kwargs):
+        if args.pipeline == "vad":
+            kwargs = {k: v for k, v in generate_kwargs.items()
+                      if k not in ("language", "task", "max_new_tokens")}
+            return asr_generator(
+                list(audio), batch_size=args.batch_size, chunk_length_s=args.chunk_length,
+                generate_kwargs=kwargs, lang_ids=[generate_kwargs["language"]] * len(audio),
+            )
         return asr_generator(
             audio, generate_kwargs=generate_kwargs, chunk_length_s=20
         )
@@ -147,9 +168,18 @@ def parse_args():
         "--task", 
         type=str, 
         default="open_asr", 
-        choices=["open_asr", "multilingual_open_asr"], 
+        choices=["open_asr", "multilingual_open_asr", "coval"], 
         help="Task to evaluate"
     )
+    args.add_argument("--chunk_length", type=int, default=20,
+                      help="Chunk length in seconds for compiled models")
+    args.add_argument("--revision", type=str, default=None,
+                      help="Model revision (commit hash)")
+    args.add_argument("--pipeline", type=str, default="hf", choices=["hf", "vad"],
+                      help="ASR pipeline: transformers (hf) or elastic_models VAD pipeline (vad)")
+    args.add_argument("--coval_trim", type=str, default="manifest",
+                      choices=["manifest", "none", "clean-twin"],
+                      help="Where Coval clips are cut, see coval/README.md")
     args = args.parse_args()
     return args
 

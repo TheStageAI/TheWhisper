@@ -34,6 +34,7 @@ class DatasetConfig:
     cache_dir: Optional[str] = None
     signal_to_noise_ratio: Optional[float] = None
     load_from_disk: bool = False
+    builder: Optional[Callable[[], Dataset]] = None  # custom loader, used instead of load_dataset
 
 
 # -------------------------------
@@ -174,7 +175,9 @@ def load_hf_dataset(cfg: DatasetConfig) -> Dataset:
         cfg.split,
         cfg.streaming,
     )
-    if cfg.load_from_disk:
+    if cfg.builder is not None:
+        ds = cfg.builder()
+    elif cfg.load_from_disk:
         ds = load_from_disk(
             cfg.dataset_name, 
             cfg.config_name, 
