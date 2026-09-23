@@ -6,18 +6,17 @@ bucket into memory and checked against the manifest sha256.
 Truncation modes:
   manifest    cut at speech_end_offset_ms from the manifest (what Coval runs)
   none        no cut, full clip
-  clean-twin  cut at the offset of the matching stt-wildasr-clean clip; for noisegap the
-              offset is shifted by the inserted silence (duration difference)
 """
 
 import hashlib
+import http.client
 import io
 import json
 import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache, partial
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import numpy as np
 import soundfile as sf
@@ -35,11 +34,7 @@ AUDIO_URL = "https://storage.googleapis.com/coval-benchmarks-datasets/{name}/{pa
 DATASETS = ["stt-v3", "stt-wildasr-accent", "stt-wildasr-clean", "stt-wildasr-clipping",
             "stt-wildasr-farfield", "stt-wildasr-noisegap", "stt-wildasr-phonecodec",
             "stt-wildasr-reverb"]
-CLEAN_TWIN = "stt-wildasr-clean"
-INHERIT_OFFSET = {"stt-wildasr-reverb", "stt-wildasr-farfield",
-                  "stt-wildasr-clipping", "stt-wildasr-phonecodec"}
-SHIFTED_OFFSET = {"stt-wildasr-noisegap"}
-TRIM_MODES = ("manifest", "none", "clean-twin")
+TRIM_MODES = ("manifest", "none")
 
 
 def _fetch(url: str, attempts: int = 5) -> bytes:
@@ -47,7 +42,7 @@ def _fetch(url: str, attempts: int = 5) -> bytes:
         try:
             with urllib.request.urlopen(url, timeout=120) as response:
                 return response.read()
-        except OSError:
+        except (OSError, http.client.HTTPException):
             time.sleep(2 ** attempt)
     with urllib.request.urlopen(url, timeout=120) as response:
         return response.read()
@@ -56,29 +51,6 @@ def _fetch(url: str, attempts: int = 5) -> bytes:
 @lru_cache(maxsize=None)
 def _manifest(name: str) -> dict:
     return json.loads(_fetch(MANIFEST_URL.format(commit=COVAL_COMMIT, name=name)))
-
-
-def _offsets(name: str, mode: str) -> Dict[str, float]:
-    """Cut offset in ms per clip path; empty dict means no cut."""
-    if mode == "none":
-        return {}
-    items = _manifest(name)["items"]
-    own = {i["path"]: i["speech_end_offset_ms"] for i in items
-           if i.get("speech_end_offset_ms") is not None}
-    # file names repeat across datasets, so only the degraded wildasr sets use the clean offsets
-    if mode == "manifest" or name not in INHERIT_OFFSET | SHIFTED_OFFSET:
-        return own
-    clean = {i["path"]: i for i in _manifest(CLEAN_TWIN)["items"]}
-    out = {}
-    for item in items:
-        source = clean[item["path"]]
-        if source.get("speech_end_offset_ms") is None:
-            continue
-        offset = source["speech_end_offset_ms"]
-        if name in SHIFTED_OFFSET:
-            offset += (item["duration_sec"] - source["duration_sec"]) * 1000.0
-        out[item["path"]] = offset
-    return out
 
 
 def _download(name: str, item: dict) -> bytes:
@@ -92,12 +64,11 @@ def _build(name: str, mode: str) -> Dataset:
     items = _manifest(name)["items"]
     with ThreadPoolExecutor(max_workers=16) as pool:
         files = list(pool.map(partial(_download, name), items))
-    cut_at = _offsets(name, mode)
 
     audio, text, trimmed = [], [], 0
     for item, data in zip(items, files):
         wave, rate = sf.read(io.BytesIO(data), dtype="float32")
-        offset = cut_at.get(item["path"])
+        offset = item.get("speech_end_offset_ms") if mode == "manifest" else None
         if offset is not None:
             keep = int(round(offset / 1000.0 * rate))
             if 0 < keep < len(wave):

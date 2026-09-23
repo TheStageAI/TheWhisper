@@ -178,7 +178,7 @@ def parse_args():
     args.add_argument("--pipeline", type=str, default="hf", choices=["hf", "vad"],
                       help="ASR pipeline: transformers (hf) or elastic_models VAD pipeline (vad)")
     args.add_argument("--coval_trim", type=str, default="manifest",
-                      choices=["manifest", "none", "clean-twin"],
+                      choices=["manifest", "none"],
                       help="Where Coval clips are cut, see coval/README.md")
     args = args.parse_args()
     return args

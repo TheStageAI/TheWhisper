@@ -42,19 +42,12 @@ which is an older checkpoint than `main`.
 ## Truncation modes
 
 Coval cuts each clip at `speech_end_offset_ms` from the manifest before sending it to a
-provider. `--coval_trim` sets the cut point:
+provider. `--coval_trim` selects the audio:
 
-| mode | cut point |
+| mode | audio |
 |---|---|
-| `manifest` | offset from the Coval manifest (what the leaderboard uses) |
-| `none` | no cut, full clip |
-| `clean-twin` | offset of the same clip in `stt-wildasr-clean` |
-
-The WildASR sets are the clean clips with an augmentation applied. Reverb and far-field add a
-tail after the last word, noise-gap inserts silence between speech segments, clipping and phone
-codec keep the length. So the end of speech in the clean clip is also the end of speech in the
-augmented one; for noise-gap the offset is shifted by the added silence. `stt-v3` and
-`stt-wildasr-accent` have no clean version and use their own offsets.
+| `manifest` | cut at the offset from the Coval manifest (what the leaderboard uses) |
+| `none` | the same clip without the cut |
 
 On `stt-wildasr-reverb` some manifest offsets are placed before the end of speech, so the last
 words are cut off and counted as deletions.
@@ -63,17 +56,17 @@ words are cut off and counted as deletions.
 
 TheWhisper, compiled XL engine, revision `355761f9`, WER %.
 
-| dataset | `manifest` | `clean-twin` | `none` |
-|---|---|---|---|
-| stt-v3 | 3.04 | 3.04 | 3.52 |
-| stt-wildasr-accent | 2.96 | 2.96 | 2.96 |
-| stt-wildasr-clean | 4.16 | 4.16 | 4.30 |
-| stt-wildasr-clipping | 5.79 | 5.86 | 5.93 |
-| stt-wildasr-farfield | 5.67 | 5.67 | 5.63 |
-| stt-wildasr-noisegap | 6.55 | 6.51 | 6.51 |
-| stt-wildasr-phonecodec | 4.98 | 5.01 | 5.13 |
-| **stt-wildasr-reverb** | **11.75** | **5.56** | **5.55** |
-| mean | 5.61 | 4.85 | 4.94 |
+| dataset | `none` (full audio) | `manifest` (Coval cut) |
+|---|---|---|
+| stt-v3 | 3.52 | 3.04 |
+| stt-wildasr-clean | 4.30 | 4.16 |
+| stt-wildasr-clipping | 5.93 | 5.79 |
+| stt-wildasr-farfield | 5.63 | 5.67 |
+| stt-wildasr-noisegap | 6.51 | 6.55 |
+| stt-wildasr-phonecodec | 5.13 | 4.98 |
+| **stt-wildasr-reverb** | **5.55** | **11.75** |
+| all datasets, pooled | 4.51 | 4.88 |
 
 WER is computed as in Coval: Whisper `EnglishTextNormalizer`, errors summed over the whole
-dataset and divided by the total number of reference words.
+dataset and divided by the total number of reference words. The last row pools all eight
+datasets the same way, which is how Coval combines datasets.
