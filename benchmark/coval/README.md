@@ -3,10 +3,27 @@
 Evaluation of TheWhisper on the [Coval STT benchmark](https://benchmarks.coval.ai/stt):
 `stt-v3` and the seven `stt-wildasr-*` datasets.
 
+## Install
+
+The benchmark runs the compiled TheStage AI engines, so install TheWhisper with the engines first
+(see [Install for Nvidia with TheStage AI optimized engines](../../README.md#install-for-nvidia-with-thestage-ai-optmized-engines)),
+then the benchmark requirements. From the repository root:
+
+```bash
+pip install 'thestage-elastic-models[nvidia]==0.2.2.post0' --index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple --extra-index-url https://pypi.nvidia.com --extra-index-url https://pypi.org/simple
+pip install .[nvidia]
+pip install thestage
+pip install -r benchmark/requirements.txt
+
+thestage config set -t <YOUR_API_TOKEN>
+```
+
+The engines are downloaded with a TheStage AI token, which you can generate in your profile on
+[TheStage AI Platform](https://app.thestage.ai).
+
 ## Run
 
 ```bash
-pip install -r benchmark/requirements.txt
 cd benchmark
 
 python run_evaluation.py --task coval --coval_trim manifest \
