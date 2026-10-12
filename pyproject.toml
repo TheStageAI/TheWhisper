@@ -35,7 +35,6 @@ nvidia = [
   "transformers==5.13.1",
   "accelerate>=1.14.0",
   "torchaudio==2.9.0",
-  "tensorrt==10.13.3.9",
   "tensorrt-cu12==10.13.3.9",
   "tensorrt-cu12-bindings==10.13.3.9",
   "tensorrt-cu12-libs==10.13.3.9",
