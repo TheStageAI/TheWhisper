@@ -31,10 +31,10 @@ dependencies = [
 
 [project.optional-dependencies]
 nvidia = [
-  "torch==2.9.0",
+  "torch>=2.9.0,<=2.10.0",
   "transformers==5.13.1",
   "accelerate>=1.14.0",
-  "torchaudio==2.9.0",
+  "torchaudio>=2.9.0,<=2.10.0",
   "tensorrt-cu12==10.13.3.9",
   "tensorrt-cu12-bindings==10.13.3.9",
   "tensorrt-cu12-libs==10.13.3.9",
