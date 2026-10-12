@@ -3,7 +3,6 @@ import sys
 import time
 import threading
 from typing import Optional
-from sounddevice import InputStream
 from librosa import load, resample
 
 import numpy as np
@@ -127,6 +126,10 @@ class MicStream:
         self.sample_rate = sample_rate
         self.device = device
         self.channels = channels
+
+        # Imported lazily: sounddevice needs the PortAudio system library,
+        # which headless servers (file/array streaming only) often lack.
+        from sounddevice import InputStream
 
         self.stream = InputStream(
             samplerate=sample_rate,
