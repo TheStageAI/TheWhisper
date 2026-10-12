@@ -82,7 +82,7 @@ pip install .[nvidia]
 
 ### Install for Nvidia with TheStage AI optmized engines
 ```bash
-pip install 'thestage-elastic-models[nvidia]==0.1.7' --index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple --extra-index-url https://pypi.nvidia.com --extra-index-url https://pypi.org/simple
+pip install 'thestage-elastic-models[nvidia]==0.2.4.post0' --index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-production/simple --extra-index-url https://pypi.nvidia.com --extra-index-url https://pypi.org/simple
 pip install .[nvidia]
 pip install thestage
 ```
@@ -92,7 +92,7 @@ pip install thestage
 Make sure you have `tensorrt==10.13.3.9` installed on your jetson and run:
 
 ```bash
-pip install thestage-elastic-models[thor]==0.1.7 --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-jetson-thor/simple -i https://pypi.jetson-ai-lab.io/sbsa/cu130/+simple/ --extra-index-url https://pypi.org
+pip install thestage-elastic-models[thor]==0.2.4.post0 --extra-index-url https://thestage.jfrog.io/artifactory/api/pypi/pypi-thestage-ai-jetson-thor/simple -i https://pypi.jetson-ai-lab.io/sbsa/cu130/+simple/ --extra-index-url https://pypi.org
 pip install .
 pip install thestage
 ```
