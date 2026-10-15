@@ -25,6 +25,7 @@ def patch_hf_model(model, chunk_length_s):
     )
     new_embeddings = new_embeddings.transpose(1, 2).squeeze(0)
     model.model.encoder.embed_positions.weight.data = new_embeddings
+    model.model.encoder.embed_positions.num_embeddings = max_source_positions
 
 
 class ASRPipeline(AutomaticSpeechRecognitionPipeline):
